@@ -1,0 +1,163 @@
+import { useState } from "react";
+import type { AuthFormProps } from "../../types/props/auth_form_props/AuthFormProps";
+import { useAuthHook } from "../../hooks/auth/useAuthHook";
+import { validacijaPodatakaAuth } from "../../api_services/validators/auth/AuthValidator";
+import { Link } from "react-router-dom";
+
+
+export function RegistracijaForma({ authApi }: AuthFormProps) {
+  const [korisnickoIme, setKorisnickoIme] = useState("");
+  const [lozinka, setLozinka] = useState("");
+  const [premium, setPremium] = useState<number>(0);      //0 - user, 1 - premium
+  const [greska, setGreska] = useState("");
+  const [prikaziLozinku, setPrikaziLozinku] = useState(false);
+  const { login } = useAuthHook();
+
+  const podnesiFormu = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const validacija = validacijaPodatakaAuth(korisnickoIme, lozinka);
+
+    if (!validacija.uspesno) {
+      setGreska(validacija.poruka ?? "Neispravni podaci");
+      return;
+    }
+
+    const odgovor = await authApi.registracija(korisnickoIme, lozinka, premium);
+
+    if (odgovor.success && odgovor.data) {
+      login(odgovor.data.token);
+    }
+    else {
+      setGreska(odgovor.message);
+      setKorisnickoIme("");
+      setLozinka("");
+    }
+  };
+
+
+  return (
+    <div className="relative min-h-screen w-full overflow-hidden">
+      {/* Pozadinski gradijent i animacija */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-200 via-blue-100 to-white"></div>
+      {[...Array(20)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-3 h-3 bg-white opacity-60 rounded-full animate-fly"
+          style={{
+            top: `${Math.random() * 100}vh`,
+            left: `${Math.random() * 100}vw`,
+            animationDuration: `${4 + Math.random() * 6}s`,
+            animationDelay: `${Math.random() * 5}s`,
+          }}
+        ></div>
+      ))}
+
+      <div className="relative z-10 flex items-center justify-center min-h-screen">
+        <div className="bg-white/95 backdrop-blur-md shadow-lg rounded-2xl p-10 w-full max-w-sm">
+          <h1 className="text-2xl font-bold text-center text-[#4451A4] mb-2">
+            Registracija u WeNotes
+          </h1>
+          <p className="text-center text-sm text-gray-700 mb-6">
+            Napravite svoj nalog i počnite sa beleškama!
+          </p>
+
+          <form onSubmit={podnesiFormu} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Korisničko ime"
+              value={korisnickoIme}
+              required
+              onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Korisnicko ime je obavezno!")}
+              onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
+              onChange={(e) => setKorisnickoIme(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4451A4]"
+            />
+          <div className="relative">
+            <input
+              type={prikaziLozinku ? "text" : "password"}
+              placeholder="Lozinka"
+              value={lozinka}
+              required
+              onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Lozinka je obavezna!")}
+              onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
+              onChange={(e) => setLozinka(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4451A4]"
+            />
+
+            <button
+              type="button"
+              onClick={() => setPrikaziLozinku(!prikaziLozinku)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#4451A4] hover:text-[#2b2b7a] text-sm"
+            >
+              {prikaziLozinku ? "Sakrij" : "Prikaži"}
+            </button>
+          </div>
+
+
+            {/* Premium korisnik */}
+            <div className="flex items-center justify-between">
+              <span className="text-gray-800 text-sm">Premium korisnik:</span>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-1">
+                  <input
+                    type="radio"
+                    name="premium"
+                    value="1"
+                    checked={premium === 1}
+                    onChange={() => setPremium(1)}
+                  />
+                  Da
+                </label>
+                <label className="flex items-center gap-1">
+                  <input
+                    type="radio"
+                    name="premium"
+                    value="0"
+                    checked={premium === 0}
+                    onChange={() => setPremium(0)}
+                  />
+                  Ne
+                </label>
+              </div>
+            </div>
+
+            {greska && (
+              <p className="text-md text-center text-red-600 font-medium">{greska}</p>
+            )}
+
+            <button
+              type="submit"
+              className="w-full bg-[#4451A4] hover:bg-[#2b2b7a] text-white py-2 rounded-lg transition"
+            >
+              Registruj se
+            </button>
+          </form>
+
+          <p className="text-center text-sm mt-4 text-gray-700">
+            Već imate nalog?{" "}
+            <Link to="/login" className="text-[#4451A4] hover:underline">
+              Prijavi se
+            </Link>
+          </p>
+        </div>
+      </div>
+
+      <style>
+        {`
+      @keyframes fly {
+        0% { transform: translate(0,0) rotate(0deg); opacity: 0.5; }
+        50% { opacity: 1; }
+        100% { transform: translate(100vw, 100vh) rotate(360deg); opacity: 0; }
+      }
+      .animate-fly {
+        animation-name: fly;
+        animation-timing-function: linear;
+        animation-iteration-count: infinite;
+      }
+    `}
+      </style>
+    </div>
+
+  );
+}

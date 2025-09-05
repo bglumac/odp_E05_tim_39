@@ -6,41 +6,39 @@ import { Link } from "react-router-dom";
 
 
 
-export function PrijavaForma({authApi} : AuthFormProps) {
-    const [korisnickoIme, setKorisnickoIme] = useState("");
-    const [lozinka, setLozinka] = useState("");
-    const [greska, setGreska] = useState("");
-    const {login} = useAuthHook();
+export function PrijavaForma({ authApi }: AuthFormProps) {
+  const [korisnickoIme, setKorisnickoIme] = useState("");
+  const [lozinka, setLozinka] = useState("");
+  const [greska, setGreska] = useState("");
+  const [prikaziLozinku, setPrikaziLozinku] = useState(false);
+  const { login } = useAuthHook();
 
-    const podnesiFormu = async(e: React.FormEvent) => {
-        e.preventDefault();
+  const podnesiFormu = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-        const validacija = validacijaPodatakaAuth(korisnickoIme, lozinka);
-        
-        if(!validacija.uspesno) {
-            setGreska(validacija.poruka ?? "Neispavni podaci");
-            return;
-        }
+    const validacija = validacijaPodatakaAuth(korisnickoIme, lozinka);
 
-        const odgovor = await authApi.prijava(korisnickoIme, lozinka);
-
-        if(odgovor.success && odgovor.data) {
-            login(odgovor.data.token);
-        }
-        else {
-            setGreska(odgovor.message);
-            setKorisnickoIme("");
-            setLozinka("");
-        }
-  
+    if (!validacija.uspesno) {
+      setGreska(validacija.poruka ?? "Neispavni podaci");
+      return;
     }
 
-    return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      {/* Svetlija gradient pozadina */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-200 via-blue-100 to-white"></div>
+    const odgovor = await authApi.prijava(korisnickoIme, lozinka);
 
-      {/* Animacija letećih papira sa svih strana */}
+    if (odgovor.success && odgovor.data) {
+      login(odgovor.data.token);
+    }
+    else {
+      setGreska(odgovor.message);
+      setKorisnickoIme("");
+      setLozinka("");
+    }
+
+  }
+
+  return (
+    <div className="relative min-h-screen w-full overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-200 via-blue-100 to-white"></div>
       {[...Array(20)].map((_, i) => (
         <div
           key={i}
@@ -53,8 +51,6 @@ export function PrijavaForma({authApi} : AuthFormProps) {
           }}
         ></div>
       ))}
-
-      {/* Centriran box za prijavu */}
       <div className="relative z-10 flex items-center justify-center min-h-screen">
         <div className="bg-white/95 backdrop-blur-md shadow-lg rounded-2xl p-10 w-full max-w-sm">
           <h1 className="text-2xl font-bold text-center text-[#4451A4] mb-2">
@@ -63,27 +59,42 @@ export function PrijavaForma({authApi} : AuthFormProps) {
           <p className="text-center text-sm text-gray-700 mb-6">
             Aplikacija za beleške, tvoja digitalna sveska u džepu!
           </p>
+
           <form onSubmit={podnesiFormu} className="space-y-4">
             <input
               type="text"
               placeholder="Korisnicko ime"
               value={korisnickoIme}
-              //required
+              required
+              onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Korisnicko ime je obavezno!")}
+              onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
               onChange={(e) => setKorisnickoIme(e.target.value)}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4451A4]"
             />
-            <input
-              type="password"
-              placeholder="Lozinka"
-              value={lozinka}
-             // required
-              onChange={(e) => setLozinka(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4451A4]"
-            />
+            <div className="relative">
+              <input
+                type={prikaziLozinku ? "text" : "password"}
+                placeholder="Lozinka"
+                value={lozinka}
+                required
+                onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Lozinka je obavezna!")}
+                onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
+                onChange={(e) => setLozinka(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#4451A4]"
+              />
+
+              <button
+                type="button"
+                onClick={() => setPrikaziLozinku(!prikaziLozinku)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#4451A4] hover:text-[#2b2b7a] text-sm"
+              >
+                {prikaziLozinku ? "Sakrij" : "Prikaži"}
+              </button>
+            </div>
 
             {greska && (
-          <p className="text-md text-center text-red-600 font-medium">{greska}</p>
-        )}
+              <p className="text-md text-center text-red-600 font-medium">{greska}</p>
+            )}
 
             <button
               type="submit"
@@ -93,7 +104,7 @@ export function PrijavaForma({authApi} : AuthFormProps) {
             </button>
           </form>
 
-          
+
           <p className="text-center text-sm mt-4 text-gray-700">
             Nemate nalog?{" "}
             <Link to="/register" className="text-[#4451A4] hover:underline">
@@ -103,7 +114,6 @@ export function PrijavaForma({authApi} : AuthFormProps) {
         </div>
       </div>
 
-      {/* Tailwind CSS animacije */}
       <style>
         {`
           @keyframes fly {
