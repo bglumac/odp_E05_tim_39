@@ -1,0 +1,88 @@
+import axios from "axios";
+import type { NoteDto } from "../../models/notes/NoteDto";
+import type { INoteAPIService } from "./INoteAPIService";
+
+const API_URL: string = import.meta.env.VITE_API_URL + "notes";
+
+export const noteApi: INoteAPIService = {
+    async getAllNotes(token: string): Promise<NoteDto[]> {
+    try {
+      const res = await axios.get<{ success: boolean; message: string; data: NoteDto[] }>(
+        `${API_URL}/`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return res.data.data || [];
+    } catch (error) {
+      console.error("Greška prilikom prikazivanja svih beleški:", error);
+      return [];
+    }
+  },
+
+  async getNoteById(token: string, noteId: number): Promise<NoteDto> {
+    try {
+      const res = await axios.get<{ success: boolean; message: string; data: NoteDto }>(
+        `${API_URL}/${noteId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return res.data.data;
+    } catch (error) {
+      console.error(`Greška prilikom prikazivanja beleške ${noteId}:`, error);
+      throw error;
+    }
+  },
+
+  async createNote(token: string, note: Partial<NoteDto>): Promise<NoteDto> {
+    try {
+      const res = await axios.post<{ success: boolean; message: string; data: NoteDto }>(
+        `${API_URL}/`,
+        note,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return res.data.data;
+    } catch (error) {
+      console.error("Greška pri kreiranju beleške:", error);
+      throw error;
+    }
+  },
+
+  async updateNote(token: string, noteId: number, note: Partial<NoteDto>): Promise<NoteDto> {
+    try {
+      const res = await axios.patch<{ success: boolean; message: string; data: NoteDto }>(
+        `${API_URL}/${noteId}`,
+        note,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return res.data.data;
+    } catch (error) {
+      console.error(`Greška prilikom ažuriranja beleške ${noteId}:`, error);
+      throw error;
+    }
+  },
+
+  async deleteNote(token: string, noteId: number): Promise<NoteDto> {
+    try {
+      const res = await axios.delete<{ success: boolean; message: string; data: NoteDto }>(
+        `${API_URL}/${noteId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return res.data.data;
+    } catch (error) {
+      console.error(`Greška prilikom brisanja beleške ${noteId}:`, error);
+      throw error;
+    }
+  },
+
+  async pinNote(token: string, noteId: number, pinned: boolean): Promise<NoteDto> {
+    try {
+      const res = await axios.patch<{ success: boolean; message: string; data: NoteDto }>(
+        `${API_URL}/${noteId}/pin`,
+        { pinned },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return res.data.data;
+    } catch (error) {
+      console.error(`Greška prilikom pinovanja beleške ${noteId}:`, error);
+      throw error;
+    }
+  }
+}
