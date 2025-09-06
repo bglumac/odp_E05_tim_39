@@ -1,10 +1,25 @@
-import db from "./Database/connection/DbConnectionPool";
+import { DatabaseConnection } from "./Database/connection/DbConnectionPool";
+import { UserRepository } from "./Database/repositories/UserRepository";
+import { User } from "./Domain/models/User";
 import server from "./server";
 
+// Constants
 const PORT = process.env.PORT || 8000;
 
-server.listen(PORT, () => {
-    console.log(`Server listening on: http://localhost:${PORT}`)
-});
+// Boot Sequence
+async function main() {
+    // Initialize databaze
+    await DatabaseConnection.Connect();
 
-db;
+    // Open web server
+    server.listen(PORT, () => {
+        console.log(`Server listening on: http://localhost:${PORT}`)
+    });
+
+    let repo = new UserRepository();
+    await repo.create(new User(1, "Dzigi", "testpass", 1));
+    console.log(await repo.getByID(1));
+    await repo.delete(1);
+}
+
+(async () => await main())();

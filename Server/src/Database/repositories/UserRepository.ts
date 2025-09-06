@@ -1,27 +1,143 @@
+import { randomUUID } from "node:crypto";
 import { User } from "../../Domain/models/User";
 import { IUserRepository } from "../../Domain/repositories/users/IUserRepository";
+import { v7 as uuidv7 } from 'uuid'
+import { DatabaseConnection } from "../connection/DbConnectionPool";
 
 export class UserRepository implements IUserRepository {
-    create(user: User): Promise<User> {
-        throw new Error("Method not implemented.");
+    db = DatabaseConnection.Get();
+    async create(user: User): Promise<User> {
+        const query = `
+            INSERT INTO Users VALUES (?, ?, ?, ?)
+            `
+
+        try {
+            const statement = await this.db.prepare(query);
+            await statement.run(user.id, user.username, user.password, user.permission)
+            return user;
+            
+        }
+
+        catch (err) {
+            console.log(err);
+            return new User();
+        }
     }
-    getByID(id: number): Promise<User> {
-        throw new Error("Method not implemented.");
+
+    async getByID(id: number): Promise<User> {
+        const query = `
+            SELECT * FROM Users WHERE uuid = ?
+        `
+
+        try {
+            const statement = await this.db.prepare(query, id);
+            const result: any = await statement.get();
+
+            if (!result) throw new Error("No such record!");
+
+            return new User(result.uuid, result.username, result.password, result.permission)
+        }
+
+        catch (err) {
+            console.log(err);
+            return new User();
+        } 
     }
-    getByUsername(username: string): Promise<User> {
-        throw new Error("Method not implemented.");
+    async getByUsername(username: string): Promise<User> {
+        const query = `
+            SELECT * FROM Users WHERE username = ?
+        `
+
+        try {
+            const statement = await this.db.prepare(query, username);
+            const result: any = await statement.get();
+
+            if (!result) throw new Error("No such record!");
+
+            return new User(result.uuid, result.username, result.password, result.permission)
+        }
+
+        catch (err) {
+            console.log(err);
+            return new User();
+        } 
     }
-    getAll(): Promise<User[]> {
-        throw new Error("Method not implemented.");
+    async getAll(): Promise<User[]> {
+        const query = `
+            SELECT * FROM Users
+        `
+
+        try {
+            const statement = await this.db.prepare(query);
+            const results: any[] = await statement.all();
+
+            return results.map(
+                (row) => new User(row.uuid, row.username, row.password, row.permission)
+            );
+        }
+
+        catch (err) {
+            console.log(err);
+            return new Array<User>();
+        } 
     }
-    update(user: User): Promise<User> {
-        throw new Error("Method not implemented.");
+
+    async update(user: User): Promise<User> {
+        const query = `
+            UPDATE Users SET username = ?, password = ?, permission = ? WHERE uuid = ?
+        `
+
+        try {
+            const statement = await this.db.prepare(query, user.username, user.password, user.permission);
+            const result = await statement.run();
+            console.log(result);
+            return user;
+        }
+
+        catch (err) {
+            console.log(err);
+            return new User();
+        }
     }
-    delete(id: number): Promise<boolean> {
-        throw new Error("Method not implemented.");
+    async delete(id: number): Promise<boolean> {
+        const query = `
+            DELETE FROM Users WHERE uuid = ?
+        `
+
+        try {
+            const statement = await this.db.prepare(query, id);
+            const result = await statement.run();
+            
+            if (result.changes == 1) {
+                console.log("Record deleted!");
+                return true;
+            }
+            return false;
+        }
+
+        catch (err) {
+            console.log(err);
+            return false;
+        }
     }
-    exists(id: number): Promise<boolean> {
-        throw new Error("Method not implemented.");
+    async exists(id: number): Promise<boolean> {
+        const query = `
+            SELECT * FROM Users WHERE uuid = ?
+        `
+
+        try {
+            const statement = await this.db.prepare(query, id);
+            const result: any = await statement.get();
+
+            if (!result) throw new Error("No such record!");
+
+            return new User(result.uuid, result.username, result.password, result.permission)
+        }
+
+        catch (err) {
+            console.log(err);
+            return new User();
+        } 
     }
-    
+
 }
