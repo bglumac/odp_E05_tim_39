@@ -1,11 +1,41 @@
 import { UserAuthDTO } from "../../Domain/DTOs/auth/UserLoginDTO";
+import { User } from "../../Domain/models/User";
+import { IUserRepository } from "../../Domain/repositories/users/IUserRepository";
 import { IAuthService } from "../../Domain/services/auth/IAuthService";
+import bcrypt from 'bcryptjs'
 
 export class AuthService implements IAuthService {
-    prijava(username: string, password: string): Promise<UserAuthDTO> {
-        throw new Error("Method not implemented.");
+    private readonly saltRounds: number = 10;
+
+    public constructor(private userRepo: IUserRepository) {}
+
+    async prijava(username: string, password: string): Promise<UserAuthDTO> {
+        const user = await this.userRepo.getByUsername(username);
+
+        if (user.id !== 0 && await bcrypt.compare(password, user.password)) {
+            return new UserAuthDTO(user.id, user.username, user.permission)
+        }
+
+        return new UserAuthDTO();
     }
-    registracija(username: string, password: string): Promise<UserAuthDTO> {
-        throw new Error("Method not implemented.");
+
+    async registracija(username: string, password: string): Promise<UserAuthDTO> {
+        const existing = await this.userRepo.getByUsername(username);
+
+        if (existing.id !== 0) {
+            return new UserAuthDTO();
+        }
+
+        const hashed = await bcrypt.hash(password, this.saltRounds);
+
+        const newUser = await this.userRepo.create(
+            new User(0, username, hashed)
+        );
+
+        if (newUser.id !== 0) {
+            return new UserAuthDTO(newUser.id, newUser.username);
+        }
+
+        return new UserAuthDTO();
     }
 }

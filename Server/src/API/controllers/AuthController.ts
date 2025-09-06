@@ -1,10 +1,14 @@
 import { Router } from "express";
+import { AuthService } from "../../Services/auth/AuthService";
+import { IAuthService } from "../../Domain/services/auth/IAuthService";
 
 export class AuthController {
     private router: Router;
+    private authService: AuthService;
     
-    constructor() {
+    constructor(authService: IAuthService) {
         this.router = Router();
+        this.authService = authService;
     }
 
     private initializeRoutes() {

@@ -15,7 +15,7 @@ export class NoteRepository implements INoteRepository {
             const statement = await this.db.prepare(query);
             await statement.run(note.id, note.owner, note.header, note.content)
             return note;
-            
+
         }
 
         catch (err) {
@@ -41,7 +41,7 @@ export class NoteRepository implements INoteRepository {
         catch (err) {
             console.log(err);
             return new Note();
-        } 
+        }
     }
 
     async getAll(): Promise<Note[]> {
@@ -61,7 +61,7 @@ export class NoteRepository implements INoteRepository {
         catch (err) {
             console.log(err);
             return new Array<Note>();
-        } 
+        }
     }
 
     async getAllUserNotes(user: User): Promise<Note[]> {
@@ -81,7 +81,7 @@ export class NoteRepository implements INoteRepository {
         catch (err) {
             console.log(err);
             return new Array<Note>();
-        } 
+        }
     }
 
     async update(note: Note): Promise<Note> {
@@ -109,7 +109,7 @@ export class NoteRepository implements INoteRepository {
         try {
             const statement = await this.db.prepare(query, id);
             const result = await statement.run();
-            
+
             if (result.changes == 1) {
                 console.log("Record deleted!");
                 return true;
@@ -139,6 +139,6 @@ export class NoteRepository implements INoteRepository {
         catch (err) {
             console.log(err);
             return false;
-        } 
+        }
     }
 }
