@@ -19,7 +19,9 @@ async function main() {
     let repo = new UserRepository();
     await repo.create(new User(1, "Dzigi", "testpass", 1));
     console.log(await repo.getByID(1));
+    console.log(await repo.exists(1));
     await repo.delete(1);
+    console.log(await repo.exists(1));
 }
 
 (async () => await main())();

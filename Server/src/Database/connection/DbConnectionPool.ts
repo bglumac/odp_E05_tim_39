@@ -3,7 +3,7 @@ import { AsyncDatabase } from 'promised-sqlite3';
 let init_query = `
 CREATE TABLE IF NOT EXISTS Users
 (
-  uuid INT NOT NULL,
+  uuid CHAR NOT NULL,
   username CHAR NOT NULL,
   password CHAR NOT NULL,
   permission INT NOT NULL DEFAULT 0,
@@ -12,10 +12,11 @@ CREATE TABLE IF NOT EXISTS Users
 
 CREATE TABLE IF NOT EXISTS Notes
 (
-  note_id INT NOT NULL,
-  text INT NOT NULL,
-  uuid INT NOT NULL,
-  FOREIGN KEY (uuid) REFERENCES User(uuid)
+  id CHAR NOT NULL,
+  header CHAR NOT NULL,
+  content CHAR,
+  owner INT NOT NULL,
+  FOREIGN KEY (owner) REFERENCES User(uuid)
 );`;
 
 export class DatabaseConnection {

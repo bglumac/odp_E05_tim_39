@@ -1,32 +1,32 @@
-import { randomUUID } from "node:crypto";
+import { Note } from "../../Domain/models/Note";
 import { User } from "../../Domain/models/User";
-import { IUserRepository } from "../../Domain/repositories/users/IUserRepository";
-import { v7 as uuidv7 } from 'uuid'
+import { INoteRepository } from "../../Domain/repositories/notes/INoteRepository";
 import { DatabaseConnection } from "../connection/DbConnectionPool";
 
-export class UserRepository implements IUserRepository {
+export class NoteRepository implements INoteRepository {
     db = DatabaseConnection.Get();
-    async create(user: User): Promise<User> {
+
+    async create(note: Note): Promise<Note> {
         const query = `
-            INSERT INTO Users VALUES (?, ?, ?, ?)
+            INSERT INTO Notes VALUES (?, ?, ?, ?)
             `
 
         try {
             const statement = await this.db.prepare(query);
-            await statement.run(user.id, user.username, user.password, user.permission)
-            return user;
+            await statement.run(note.id, note.owner, note.header, note.content)
+            return note;
             
         }
 
         catch (err) {
             console.log(err);
-            return new User();
+            return new Note()
         }
     }
 
-    async getByID(id: number): Promise<User> {
+    async getByID(id: number): Promise<Note> {
         const query = `
-            SELECT * FROM Users WHERE uuid = ?
+            SELECT * FROM Notes WHERE id = ?
         `
 
         try {
@@ -35,36 +35,18 @@ export class UserRepository implements IUserRepository {
 
             if (!result) throw new Error("No such record!");
 
-            return new User(result.uuid, result.username, result.password, result.permission)
+            return new Note(result.id, result.owner, result.header, result.content)
         }
 
         catch (err) {
             console.log(err);
-            return new User();
+            return new Note();
         } 
     }
-    async getByUsername(username: string): Promise<User> {
+
+    async getAll(): Promise<Note[]> {
         const query = `
-            SELECT * FROM Users WHERE username = ?
-        `
-
-        try {
-            const statement = await this.db.prepare(query, username);
-            const result: any = await statement.get();
-
-            if (!result) throw new Error("No such record!");
-
-            return new User(result.uuid, result.username, result.password, result.permission)
-        }
-
-        catch (err) {
-            console.log(err);
-            return new User();
-        } 
-    }
-    async getAll(): Promise<User[]> {
-        const query = `
-            SELECT * FROM Users
+            SELECT * FROM Notes
         `
 
         try {
@@ -72,36 +54,56 @@ export class UserRepository implements IUserRepository {
             const results: any[] = await statement.all();
 
             return results.map(
-                (row) => new User(row.uuid, row.username, row.password, row.permission)
+                (row) => new Note(row.id, row.owner, row.header, row.content)
             );
         }
 
         catch (err) {
             console.log(err);
-            return new Array<User>();
+            return new Array<Note>();
         } 
     }
 
-    async update(user: User): Promise<User> {
+    async getAllUserNotes(user: User): Promise<Note[]> {
         const query = `
-            UPDATE Users SET username = ?, password = ?, permission = ? WHERE uuid = ?
+            SELECT * FROM Notes WHERE owner = ?
         `
 
         try {
-            const statement = await this.db.prepare(query, user.username, user.password, user.permission);
-            const result = await statement.run();
-            console.log(result);
-            return user;
+            const statement = await this.db.prepare(query, user.id);
+            const results: any[] = await statement.all();
+
+            return results.map(
+                (row) => new Note(row.id, row.owner, row.header, row.content)
+            );
         }
 
         catch (err) {
             console.log(err);
-            return new User();
+            return new Array<Note>();
+        } 
+    }
+
+    async update(note: Note): Promise<Note> {
+        const query = `
+            UPDATE Notes SET header = ?, content = ? WHERE id = ?
+        `
+
+        try {
+            const statement = await this.db.prepare(query, note.header, note.content, note.id);
+            const result = await statement.run();
+            console.log(result);
+            return note;
+        }
+
+        catch (err) {
+            console.log(err);
+            return new Note();
         }
     }
     async delete(id: number): Promise<boolean> {
         const query = `
-            DELETE FROM Users WHERE uuid = ?
+            DELETE FROM Notes WHERE id = ?
         `
 
         try {
@@ -120,9 +122,10 @@ export class UserRepository implements IUserRepository {
             return false;
         }
     }
+
     async exists(id: number): Promise<boolean> {
         const query = `
-            SELECT * FROM Users WHERE uuid = ?
+            SELECT * FROM Notes WHERE id = ?
         `
 
         try {
