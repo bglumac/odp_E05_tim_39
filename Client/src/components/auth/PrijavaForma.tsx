@@ -25,8 +25,8 @@ export function PrijavaForma({ authApi }: AuthFormProps) {
 
     const odgovor = await authApi.prijava(korisnickoIme, lozinka);
 
-    if (odgovor.success && odgovor.data) {
-      login(odgovor.data.token);
+    if (odgovor.status && odgovor.data) {
+      login(odgovor.data);
     }
     else {
       setGreska(odgovor.message);
