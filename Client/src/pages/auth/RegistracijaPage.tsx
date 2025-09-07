@@ -17,7 +17,7 @@ export default function RegistracijaPage({authApi}: RegistracijaPageProps) {
 
     useEffect(() => {
         if(isAuthenticated && user) {
-            const u = (user.premium === 0 ? "user" : "premium-user");
+            const u = (user.permission === 0 ? "user" : "premium-user");
             navigate(`/${u}-dashboard`);
         }
     }, [isAuthenticated, navigate, user]);

@@ -159,7 +159,7 @@ export default function DashboardPage({ noteApi }: DashboardPageProps) {
 
       <main className="flex-1 p-6 flex flex-col">
         <h1 className="text-3xl md:text-4xl font-bold text-[#4451A4] mb-12">
-          Welcome back, {user?.korisnickoIme}!
+          Welcome back, {user?.username}!
         </h1>
 
         <div className="flex-1 overflow-auto">
@@ -186,7 +186,7 @@ export default function DashboardPage({ noteApi }: DashboardPageProps) {
           <button
             onClick={async () => {
               try {
-                if (user?.premium !== 1 && notes.length >= 10) {
+                if (user?.permission !== 1 && notes.length >= 10) {
                   setShowLimitPopup(true);
                   setTimeout(() => setShowLimitPopup(false), 3000);
                   return;

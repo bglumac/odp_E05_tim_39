@@ -9,7 +9,8 @@ export const authApi: IAuthAPIService = {
        try {
             const res = await axios.post<AuthResponse>(`${API_URL}/login`, {
                 username: korisnickoIme,
-                password: lozinka
+                password: lozinka,
+                permission: 0
             });
 
             return res.data;
@@ -23,7 +24,7 @@ export const authApi: IAuthAPIService = {
         }
 
         return {
-            success: false,
+            status: false,
             message,
             data: undefined
         };
@@ -48,7 +49,7 @@ export const authApi: IAuthAPIService = {
         }
 
         return {
-            success: false,
+            status: false,
             message,
             data: undefined
         };

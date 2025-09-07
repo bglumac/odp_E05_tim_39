@@ -17,8 +17,8 @@ export default function AccountInfoForm() {
             try {
                 const decoded = jwtDecode<JwtTokenClaims>(token);
                 setId(decoded.id);
-                setKorisnickoIme(decoded.korisnickoIme);
-                setPremium(decoded.premium);
+                setKorisnickoIme(decoded.username);
+                setPremium(decoded.permission);
             } catch (err) {
                 console.error("Nevalidan token:", err);
             }

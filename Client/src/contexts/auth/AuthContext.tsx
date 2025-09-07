@@ -12,11 +12,11 @@ const decodeJwt = (token: string): JwtTokenClaims | null => {
     try {
         const decoded = jwtDecode<JwtTokenClaims>(token);
 
-        if(decoded.id && decoded.korisnickoIme && decoded.premium) {
+        if(decoded.id && decoded.username && decoded.permission) {
             return {
                 id: decoded.id,
-                korisnickoIme: decoded.korisnickoIme,
-                premium: decoded.premium
+                username: decoded.username,
+                permission: decoded.permission
             };
         }
 
@@ -61,8 +61,8 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({children}) => {
                 setToken(savedToken);
                 setUser({
                     id: claims.id,
-                    korisnickoIme: claims.korisnickoIme,
-                    premium: claims.premium
+                    username: claims.username,
+                    permission: claims.permission
                 });
             }
             else {
@@ -81,8 +81,8 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({children}) => {
             setToken(newToken);
             setUser({
                 id: claims.id,
-                korisnickoIme: claims.korisnickoIme,
-                premium: claims.premium
+                username: claims.username,
+                permission: claims.permission
             });
 
             SacuvajVrednostPoKljucu("authToken", newToken);
