@@ -68,6 +68,10 @@ export class NoteController {
         try {
             const { header, content } = req.body;
             if (req.user) {
+                if (req.user.permission < 1 && (await this.noteService.getAllUserNotes(req.user.id)).length >= 10) {
+                    res.status(401).send({ status: false, message: "Can't make more than 10 as a non-premium user"})
+                }
+
                 const validation = NoteDataValidation(header, content)
                 if (!validation.status) {
                     res.status(400).json({ status: false, message: validation.message })
