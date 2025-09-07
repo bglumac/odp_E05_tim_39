@@ -29,6 +29,7 @@ export default function DashboardPage({ noteApi }: DashboardPageProps) {
   const [loading, setLoading] = useState(true);
   const { user } = useAuthHook();
   const [notes, setNotes] = useState<NoteDto[]>([]);
+  const [showLimitPopup, setShowLimitPopup] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || !token) {
@@ -103,7 +104,7 @@ export default function DashboardPage({ noteApi }: DashboardPageProps) {
       setNotes(updated.map(n => ({ ...n, isSelected: false })));
       setShowDeleteConfirm(false);
     }
-    catch(error) {
+    catch (error) {
       console.error("Greska prilikom brisanja beleske/beleski: ", error);
     }
   }
@@ -162,7 +163,14 @@ export default function DashboardPage({ noteApi }: DashboardPageProps) {
         </h1>
 
         <div className="flex-1 overflow-auto">
-          {notes.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center h-full space-y-4">
+              <div className="w-16 h-16 border-4 border-[#4451A4] border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-xl font-semibold text-[#4451A4] animate-pulse">
+                Fetching your notes...
+              </p>
+            </div>
+          ) : notes.length === 0 ? (
             <div className="flex justify-center items-center border border-[#4451A4] rounded-lg p-10 text-2xl text-[#4451A4]">
               Your notes will appear here...
             </div>
@@ -178,13 +186,18 @@ export default function DashboardPage({ noteApi }: DashboardPageProps) {
           <button
             onClick={async () => {
               try {
+                if (user?.premium !== 1 && notes.length >= 10) {
+                  setShowLimitPopup(true);
+                  setTimeout(() => setShowLimitPopup(false), 3000);
+                  return;
+                }
                 // kreiraj belešku na serveru
                 const newNote = await noteApi.createNote(token!, {
                   noteTitle: "Title",     // iz inputa forme
                   content: "",     // iz contentEditable ili textarea
                   isPinned: false,   // boolean
                 });
-                
+
                 setNotes(prevNotes => [...prevNotes, newNote]);
               } catch (err) {
                 console.error(err);
@@ -195,6 +208,13 @@ export default function DashboardPage({ noteApi }: DashboardPageProps) {
           >
             +
           </button>
+
+          {/* Popup za limit beleški */}
+          {showLimitPopup && (
+            <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg animate-bounce z-50">
+              Dostigli ste limit od 10 beleški. Nadogradite na premium za više beleški!
+            </div>
+          )}
 
         </div>
       </main>

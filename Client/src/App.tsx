@@ -7,6 +7,7 @@ import { ProtectedRoute } from "./components/auth/protected_route/ProtectedRoute
 import UserDashboard from "./pages/user/UserDashboard";
 import EditNotePage from "./pages/edit_note/EditNotePage";
 import { noteApi } from "./api_services/note_api/NoteAPIService";
+import AccountInfoForm from "./components/account_info/AccountInfoForm";
 
 
 function App() {
@@ -21,7 +22,7 @@ function App() {
       <Route 
         path="/user-dashboard"
         element={
-          <ProtectedRoute premium={1}>
+          <ProtectedRoute>
             <UserDashboard noteApi={noteApi} />
           </ProtectedRoute>
         }/> 
@@ -30,10 +31,20 @@ function App() {
         <Route 
         path="/edit/:noteId"
         element={
-          <ProtectedRoute premium={1}>
+          <ProtectedRoute>
             <EditNotePage />
           </ProtectedRoute>
         }
+        />
+
+        {/*Account info ruta */}
+        <Route 
+          path="/account"
+          element={
+            <ProtectedRoute>
+              <AccountInfoForm/>
+            </ProtectedRoute>
+          }
         />
 
       {/*Default ruta*/}
