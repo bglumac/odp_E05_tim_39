@@ -62,13 +62,13 @@ export class NoteRepository implements INoteRepository {
         }
     }
 
-    async getAllUserNotes(user: User): Promise<Note[]> {
+    async getAllUserNotes(id: number): Promise<Note[]> {
         const query = `
             SELECT * FROM Notes WHERE owner = ?
         `
 
         try {
-            const statement = await DatabaseConnection.Get().prepare(query, user.id);
+            const statement = await DatabaseConnection.Get().prepare(query, id);
             const results: any[] = await statement.all();
 
             return results.map(
