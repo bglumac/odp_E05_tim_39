@@ -3,16 +3,17 @@ import { User } from "../../Domain/models/User";
 import { IUserRepository } from "../../Domain/repositories/users/IUserRepository";
 import { v7 as uuidv7 } from 'uuid'
 import { DatabaseConnection } from "../connection/DbConnectionPool";
+import { AsyncDatabase } from "promised-sqlite3";
 
 export class UserRepository implements IUserRepository {
-    db = DatabaseConnection.Get();
+
     async create(user: User): Promise<User> {
         const query = `
             INSERT INTO Users VALUES (?, ?, ?, ?)
             `
 
         try {
-            const statement = await this.db.prepare(query);
+            const statement = await DatabaseConnection.Get().prepare(query);
             await statement.run(user.id, user.username, user.password, user.permission)
             return user;
             
@@ -30,7 +31,7 @@ export class UserRepository implements IUserRepository {
         `
 
         try {
-            const statement = await this.db.prepare(query, id);
+            const statement = await DatabaseConnection.Get().prepare(query, id);
             const result: any = await statement.get();
 
             if (!result) throw new Error("No such record!");
@@ -49,7 +50,7 @@ export class UserRepository implements IUserRepository {
         `
 
         try {
-            const statement = await this.db.prepare(query, username);
+            const statement = await DatabaseConnection.Get().prepare(query, username);
             const result: any = await statement.get();
 
             if (!result) throw new Error("No such record!");
@@ -68,7 +69,7 @@ export class UserRepository implements IUserRepository {
         `
 
         try {
-            const statement = await this.db.prepare(query);
+            const statement = await DatabaseConnection.Get().prepare(query);
             const results: any[] = await statement.all();
 
             return results.map(
@@ -88,7 +89,7 @@ export class UserRepository implements IUserRepository {
         `
 
         try {
-            const statement = await this.db.prepare(query, user.username, user.password, user.permission);
+            const statement = await DatabaseConnection.Get().prepare(query, user.username, user.password, user.permission);
             const result = await statement.run();
             console.log(result);
             return user;
@@ -105,7 +106,7 @@ export class UserRepository implements IUserRepository {
         `
 
         try {
-            const statement = await this.db.prepare(query, id);
+            const statement = await DatabaseConnection.Get().prepare(query, id);
             const result = await statement.run();
             
             if (result.changes == 1) {
@@ -126,7 +127,7 @@ export class UserRepository implements IUserRepository {
         `
 
         try {
-            const statement = await this.db.prepare(query, id);
+            const statement = await DatabaseConnection.Get().prepare(query, id);
             const result: any = await statement.get();
 
             if (!result) return false;

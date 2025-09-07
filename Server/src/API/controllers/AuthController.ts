@@ -8,7 +8,7 @@ import { permission } from "process";
 export class AuthController {
     private router: Router;
     private authService: IAuthService;
-    
+
     constructor(authService: IAuthService) {
         this.router = Router();
         this.authService = authService;
@@ -35,6 +35,8 @@ export class AuthController {
             const { username, password } = req.body;
             const validation = AuthDataValidation(username, password);
 
+            console.log(`${username}:${password}`);
+
             if (!validation.status) {
                 res.status(400).json({ status: false, message: validation.message })
             }
@@ -52,6 +54,7 @@ export class AuthController {
 
         catch (err) {
             res.status(500).json({ status: false, message: err })
+            console.log(err);
         }
     }
 
@@ -62,22 +65,37 @@ export class AuthController {
      * @param res Response var
      */
     private async login(req: Request, res: Response): Promise<void> {
-        const {username, password } = req.body;
+        try {
+            const { username, password } = req.body;
 
-        const validation = AuthDataValidation(username, password);
-        if (!validation.status) {
-            res.status(400).json( { status: false, message: validation.message })
-            return;
+            const validation = AuthDataValidation(username, password);
+            if (!validation.status) {
+                res.status(400).json({ status: false, message: validation.message })
+                return;
+            }
+
+            const userDTO = await this.authService.prijava(username, password);
+
+            const token = jwt.sign(
+                {
+                    id: userDTO.id,
+                    username: userDTO.username,
+                    permission: userDTO.permission
+                }, process.env.JWT_SECRET ?? "", { expiresIn: '12h' }
+            )
+
+            if (userDTO.id == 0) {
+                res.status(404).json({ status: false, message: "User fetch error" })
+            }
+
+            else {
+                res.status(200).json({ status: true, message: "Login success!", data: token })
+            }
         }
 
-        const userDTO = await this.authService.prijava(username, password);
+        catch (err) {
+            res.status(500).json({ status: false, message: err })
+        }
 
-        const token = jwt.sign(
-            {
-                id: userDTO.id,
-                username: userDTO.username,
-                permission: userDTO.permission
-            }, process.env.JWT_SECRET ?? "", {expiresIn: '12h' }
-        )
     }
 }
