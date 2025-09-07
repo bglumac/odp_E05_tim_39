@@ -4,6 +4,7 @@ export class Note {
     public owner: number = 0,
     public header: string = '',
     public content: string = '',
+    public pinned: boolean = false,
     public published: boolean = false
   ) {}
 }

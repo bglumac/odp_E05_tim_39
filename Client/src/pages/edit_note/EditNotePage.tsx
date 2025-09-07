@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
 import type { NoteDto } from "../../models/notes/NoteDto";
 import SideMenuForm from "../../components/dashboard/SideMenuForm";
 import EditNoteForm from "../../components/edit_note/EditNoteForm";
 import { useAuthHook } from "../../hooks/auth/useAuthHook";
 import { ProcitajVrednostPoKljucu } from "../../helpers/local_storage";
 import type { INoteAPIService } from "../../api_services/note_api/INoteAPIService";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface EditPageProps {
     noteApi: INoteAPIService;
@@ -41,7 +41,6 @@ const EditNotePage = ({ noteApi }: EditPageProps) => {
 
         (async () => {
             try {
-                console.log("fetching??")
                 const noteID = params.noteId;
                 console.log(noteID)
                 if (!noteID) return;
@@ -78,6 +77,8 @@ const EditNotePage = ({ noteApi }: EditPageProps) => {
     const handleSaveNote = (updatedNote: NoteDto) => {
         setNote(updatedNote); // ažurira lokalno
         // Ovdje kasnije možeš dodati API poziv ako backend postoji
+        noteApi.updateNote(token, updatedNote.id, updatedNote);
+        console.log(updatedNote);
         navigate("/user-dashboard");
     };
 

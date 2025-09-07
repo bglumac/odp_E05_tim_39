@@ -8,14 +8,16 @@ interface EditNoteFormProps {
     onSave: (updatedNote: NoteDto) => void;
 }
 
-const EditNoteForm = ({ note, isPremium, onSave}: EditNoteFormProps) => {
+const EditNoteForm = ({ note, isPremium, onSave }: EditNoteFormProps) => {
     const navigate = useNavigate();
     const [title, setTitle] = useState(note.header);
+    const [header, setHeader] = useState(note.content);
     const [isPinned, setIsPinned] = useState(note.isPinned);
+
     const [showSaveConfirm, setShowSaveConfirm] = useState(false);
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-    const [images, setImages] = useState<string[]>([]);
-    const contentRef = useRef<HTMLDivElement>(null);
+
+    const [images, setImages] = useState<string[]>([]);;
 
     const applyStyle = (command: string, value?: string) => {
         document.execCommand(command, false, value);            //za formatiranje teksta
@@ -33,12 +35,10 @@ const EditNoteForm = ({ note, isPremium, onSave}: EditNoteFormProps) => {
 
 
     const handleSave = () => {
-    if (contentRef.current) {
-        note.content = contentRef.current.innerHTML;
-    }
-    const updatedNote = { ...note, noteTitle: title, isPinned };
-    onSave(updatedNote); // ← šaljemo roditelju
-};
+
+        const updatedNote = { ...note, noteTitle: title, header: header, isPinned };
+        // onSave(updatedNote); // ← šaljemo roditelju
+    };
 
     const handleCancel = () => {
         setShowCancelConfirm(false);
@@ -70,7 +70,7 @@ const EditNoteForm = ({ note, isPremium, onSave}: EditNoteFormProps) => {
             {/* Title */}
             <input
                 type="text"
-                value={note.header}
+                value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Note title..."
                 className="w-full border-b-2 border-[#4451A4] text-2xl px-2 py-1 focus:outline-none mb-4"
@@ -87,12 +87,7 @@ const EditNoteForm = ({ note, isPremium, onSave}: EditNoteFormProps) => {
                         <input type="file" accept="image/*" onChange={handleImageInsert} className="ml-2" />
                     )}
                 </div>
-                <div
-                    ref={contentRef}
-                    contentEditable
-                    className="w-full min-h-[400px] p-4 border border-gray-300 rounded resize-none focus:outline-none"
-                    dangerouslySetInnerHTML={{ __html: note.content || " " }}
-                />
+                <textarea className="w-full min-h-[400px] p-4 border border-gray-300 rounded resize-none focus:outline-none" value={header} onChange={(e) => setHeader(e.target.value)} />
 
                 {images.length > 0 && (
                     <div className="flex flex-wrap gap-4 mt-4">

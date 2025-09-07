@@ -54,7 +54,7 @@ export const noteApi: INoteAPIService = {
 
   async updateNote(token: string, noteId: number, note: NoteDto): Promise<NoteDto> {
     try {
-      const res = await axios.post<{ success: boolean; message: string; data: NoteDto }>(
+      const res = await axios.patch<{ success: boolean; message: string; data: NoteDto }>(
         `${API_URL}/getID/${noteId}`,
         note,
         { headers: { Authorization: `Bearer ${token}` } }

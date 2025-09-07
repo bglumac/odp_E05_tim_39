@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS Notes
   header CHAR NOT NULL,
   content CHAR,
   published INT NOT NULL,
+  pinned INT NOT NULL,
   owner INT NOT NULL,
   FOREIGN KEY (owner) REFERENCES User(uuid)
 );`;

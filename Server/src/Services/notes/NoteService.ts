@@ -11,7 +11,7 @@ export class NoteService implements INoteService {
         const note = await this.noteRepo.create(new Note(IDGenerator(), owner, header, content));
 
         if (note.id !== 0) {
-            return new NoteDTO(note.id, note.owner, note.header, note.content, note.published);
+            return new NoteDTO(note.id, note.owner, note.header, note.content, note.pinned, note.published);
         }
 
         return new NoteDTO();

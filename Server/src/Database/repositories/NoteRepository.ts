@@ -6,12 +6,12 @@ import { DatabaseConnection } from "../connection/DbConnectionPool";
 export class NoteRepository implements INoteRepository {
     async create(note: Note): Promise<Note> {
         const query = `
-            INSERT INTO Notes VALUES (?, ?, ?, ?, ?)
+            INSERT INTO Notes VALUES (?, ?, ?, ?, ?, ?)
             `
 
         try {
             const statement = await DatabaseConnection.Get().prepare(query);
-            await statement.run(note.id, note.header, note.content, note.published, note.owner)
+            await statement.run(note.id, note.header, note.content, note.published, note.pinned, note.owner)
             return note;
 
         }
@@ -33,7 +33,7 @@ export class NoteRepository implements INoteRepository {
 
             if (!result) throw new Error("No such record!");
 
-            return new Note(result.id, result.owner, result.header, result.content, result.published)
+            return new Note(result.id, result.owner, result.header, result.content, result.pinned, result.published)
         }
 
         catch (err) {
@@ -52,7 +52,7 @@ export class NoteRepository implements INoteRepository {
             const results: any[] = await statement.all();
 
             return results.map(
-                (row) => new Note(row.id, row.owner, row.header, row.content, row.published)
+                (row) => new Note(row.id, row.owner, row.header, row.content, row.pinned, row.published)
             );
         }
 
@@ -72,7 +72,7 @@ export class NoteRepository implements INoteRepository {
             const results: any[] = await statement.all();
 
             return results.map(
-                (row) => new Note(row.id, row.owner, row.header, row.content, row.published)
+                (row) => new Note(row.id, row.owner, row.header, row.content, row.pinned, row.published)
             );
         }
 
@@ -84,11 +84,11 @@ export class NoteRepository implements INoteRepository {
 
     async update(note: Note): Promise<Note> {
         const query = `
-            UPDATE Notes SET header = ?, content = ? WHERE id = ?
+            UPDATE Notes SET header = ?, content = ?, pinned = ?, published = ? WHERE id = ?
         `
 
         try {
-            const statement = await DatabaseConnection.Get().prepare(query, note.header, note.content, note.id);
+            const statement = await DatabaseConnection.Get().prepare(query, note.header, note.content, note.pinned, note.published, note.id);
             const result = await statement.run();
             console.log(result);
             return note;

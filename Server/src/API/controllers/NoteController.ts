@@ -100,8 +100,9 @@ export class NoteController {
     private async update(req: Request, res: Response) {
         try {
             const id = parseInt(req.params.id);
-            const { owner, header, content, published } = req.body;
+            const { owner, header, content, pinned, published } = req.body;
 
+            console.log("Updating to " + content);
             const validation = NoteDataValidation(header, content)
             if (!validation.status) {
                 res.status(400).json({ status: false, message: validation.message })
@@ -114,7 +115,7 @@ export class NoteController {
             }
 
 
-            const noteDTO = await this.noteService.updateNote(new Note(id, owner, header, content, published));
+            const noteDTO = await this.noteService.updateNote(new Note(id, owner, header, content, pinned, published));
             if (noteDTO.id !== 0) {
                 res.status(200).json({ status: true, message: "Note updated!" })
             }

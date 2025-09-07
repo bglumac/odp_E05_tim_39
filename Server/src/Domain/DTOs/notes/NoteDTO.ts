@@ -4,6 +4,7 @@ export class NoteDTO {
         public owner:number = 0,
         public header: string = 'None',
         public content: string = '',
+        public pinned: boolean = false,
         public published: boolean = false
     ){}
 }
