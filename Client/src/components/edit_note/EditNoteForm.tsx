@@ -1,156 +1,122 @@
-import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import type { NoteDto } from "../../models/notes/NoteDto";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+
+import type { INoteAPIService } from "../../api_services/note_api/INoteAPIService";
+import { useAuthHook } from "../../hooks/auth/useAuthHook";
+import { ProcitajVrednostPoKljucu } from "../../helpers/local_storage";
 
 interface EditNoteFormProps {
-    note: NoteDto;
-    isPremium: boolean;
-    onSave: (updatedNote: NoteDto) => void;
+  noteApi: INoteAPIService;
 }
 
-const EditNoteForm = ({ note, isPremium, onSave }: EditNoteFormProps) => {
-    const navigate = useNavigate();
-    const [title, setTitle] = useState(note.header);
-    const [header, setHeader] = useState(note.content);
-    const [isPinned, setIsPinned] = useState(note.isPinned);
+const EditNoteForm = ({ noteApi }: EditNoteFormProps) => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuthHook();
+  const token = ProcitajVrednostPoKljucu("authToken") || "";
 
-    const [showSaveConfirm, setShowSaveConfirm] = useState(false);
-    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const [images, setImages] = useState<string[]>([]);;
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState<string>("");
+  const [isPinned, setIsPinned] = useState(false);
 
-    const applyStyle = (command: string, value?: string) => {
-        document.execCommand(command, false, value);            //za formatiranje teksta
-    };
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      logout();
+      navigate("/login");
+      return;
+    }
 
-    const handleImageInsert = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                setImages(prev => [...prev, ev.target?.result as string]);
-            };
-            reader.readAsDataURL(e.target.files[0]);
-        }
-    };
-
-
-    const handleSave = () => {
-
-        const updatedNote = { ...note, noteTitle: title, header: header, isPinned };
-        // onSave(updatedNote); // ← šaljemo roditelju
-    };
-
-    const handleCancel = () => {
-        setShowCancelConfirm(false);
+    const fetchNote = async () => {
+      try {
+        const data = await noteApi.getNoteById(token, Number(id));
+        setTitle(data.header);
+        setContent(data.content ?? "");
+        setIsPinned(data.pinned ?? false);
+      } catch (err) {
+        console.error(err);
         navigate("/user-dashboard");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    return (
-        <div className="relative flex flex-col w-full gap-4 p-6">
-            {/* Gornji deo */}
-            <div className="flex justify-between items-start mb-4">
-                <div className="text-left">
-                    <p className="text-sm text-gray-400">Created: {note.createdAt || "N/A"}</p>
-                    <p className="text-sm text-gray-400">Updated: {note.updatedAt || "N/A"}</p>
-                </div>
-                <div className="flex flex-col items-end">
-                    <span className="text-gray-400 text-sm">ID: {note.id}</span>
-                    <label className="flex items-center gap-2 mt-1 font-semibold text-[#4451A4]">
-                        <input
-                            type="checkbox"
-                            checked={isPinned}
-                            onChange={() => setIsPinned(prev => !prev)}
-                            className="accent-[#4451A4] w-5 h-5"
-                        />
-                        Pin
-                    </label>
-                </div>
-            </div>
+    fetchNote();
+  }, [id, isAuthenticated, token, logout, navigate, noteApi]);
 
-            {/* Title */}
-            <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Note title..."
-                className="w-full border-b-2 border-[#4451A4] text-2xl px-2 py-1 focus:outline-none mb-4"
-            />
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
 
-            {/* Content sa toolbarom */}
-            <div className="flex flex-col gap-2 mb-4">
-                <div className="flex gap-2 mb-1">
-                    <button type="button" onClick={() => applyStyle("bold")} className="font-bold px-2 py-1 border rounded">B</button>
-                    <button type="button" onClick={() => applyStyle("italic")} className="italic px-2 py-1 border rounded">I</button>
-                    <button type="button" onClick={() => applyStyle("underline")} className="underline px-2 py-1 border rounded">U</button>
-                    <input type="color" onChange={(e) => applyStyle("foreColor", e.target.value)} className="w-8 h-8 p-0 border rounded" />
-                    {isPremium && (
-                        <input type="file" accept="image/*" onChange={handleImageInsert} className="ml-2" />
-                    )}
-                </div>
-                <textarea className="w-full min-h-[400px] p-4 border border-gray-300 rounded resize-none focus:outline-none" value={header} onChange={(e) => setHeader(e.target.value)} />
+    try {
+      await noteApi.updateNote(token, Number(id), {
+        id: Number(id),
+        header: title,
+        content,
+        pinned: isPinned
+      });
+      navigate("/user-dashboard");
+    } catch (err) {
+      console.error(err);
+      setError("Greška pri čuvanju beleške. Pokušajte ponovo.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
-                {images.length > 0 && (
-                    <div className="flex flex-wrap gap-4 mt-4">
-                        {images.map((img, index) => (
-                            <div key={index} className="relative inline-block">
-                                <img src={img} alt={`Image ${index}`} className="max-h-32 rounded" />
-                                <button
-                                    type="button"
-                                    onClick={() => setImages(prev => prev.filter((_, i) => i !== index))}
-                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                )}
+  if (loading) {
+    return <div className="text-center mt-10">Loading...</div>;
+  }
 
-            </div>
+  return (
+    <div className="flex flex-col gap-4">
+      <h1 className="text-2xl font-bold text-[#4451A4]">Edit Note</h1>
 
-            {/* Dugmici ispod textboxa */}
-            <div className="flex justify-end gap-4">
-                <button
-                    className="px-6 py-2 bg-[#4451A4] text-white rounded-lg shadow"
-                    onClick={() => setShowSaveConfirm(true)}
-                >
-                    Save
-                </button>
-                <button
-                    className="px-6 py-2 bg-white border border-[#4451A4] text-[#4451A4] rounded-lg shadow"
-                    onClick={() => setShowCancelConfirm(true)}
-                >
-                    Cancel
-                </button>
-            </div>
+      {error && <p className="text-red-600">{error}</p>}
 
-            {/* Save confirm modal */}
-            {showSaveConfirm && (
-                <div className="fixed inset-0 flex justify-center items-center backdrop-blur-sm z-50">
-                    <div className="bg-white p-6 rounded-lg w-80 text-center shadow-lg">
-                        <p className="mb-4 text-[#4451A4]">Želite li da sačuvate promene?</p>
-                        <div className="flex justify-center gap-4">
-                            <button className="px-4 py-2 bg-[#4451A4] text-white rounded-lg" onClick={handleSave}>Save</button>
-                            <button className="px-4 py-2 bg-gray-300 rounded-lg" onClick={() => setShowSaveConfirm(false)}>Cancel</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+      <input
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="border-b-2 border-[#4451A4] text-2xl px-2 py-1"
+      />
 
-            {/* Cancel confirm modal */}
-            {showCancelConfirm && (
-                <div className="fixed inset-0 flex justify-center items-center backdrop-blur-sm z-50">
-                    <div className="bg-white p-6 rounded-lg w-80 text-center shadow-lg">
-                        <p className="mb-4 text-[#4451A4]">Izmene se neće sačuvati. Želite li da izađete?</p>
-                        <div className="flex justify-center gap-4">
-                            <button className="px-4 py-2 bg-[#4451A4] text-white rounded-lg" onClick={handleCancel}>Exit, don't save</button>
-                            <button className="px-4 py-2 bg-gray-300 rounded-lg" onClick={() => setShowCancelConfirm(false)}>Cancel</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        className="min-h-[300px] border p-4"
+      />
+
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={isPinned}
+          onChange={() => setIsPinned((prev) => !prev)}
+        />
+        Pin
+      </label>
+
+      <div className="flex gap-4">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className={`px-4 py-2 rounded text-white ${
+            saving ? "bg-gray-400" : "bg-[#4451A4] hover:bg-[#3b4699]"
+          }`}
+        >
+          {saving ? "Saving..." : "Save"}
+        </button>
+        <button
+          onClick={() => navigate("/user-dashboard")}
+          className="border border-[#4451A4] text-[#4451A4] px-4 py-2 rounded"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default EditNoteForm;

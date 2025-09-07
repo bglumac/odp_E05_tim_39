@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useParams } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { authApi } from "./api_services/auth/AuthAPIService";
 import Prijava from "./pages/auth/PrijavaPage";
 import RegistracijaPage from "./pages/auth/RegistracijaPage";
