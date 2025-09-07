@@ -17,6 +17,9 @@ export class NoteController {
     private initializeRoutes() {
         this.router.get(`/getAll`, authenticate, this.getAll.bind(this))
         this.router.get(`/getID/:id`, authenticate, this.getID.bind(this))
+        this.router.patch(`/getID/:id`, authenticate, this.update.bind(this))
+        this.router.delete(`/getID/:id`, authenticate, this.delete.bind(this))
+
         this.router.post('/create', authenticate, this.create.bind(this));
         this.router.post('/update', authenticate, this.update.bind(this));
         this.router.post('/delete', authenticate, this.delete.bind(this));
@@ -96,14 +99,22 @@ export class NoteController {
 
     private async update(req: Request, res: Response) {
         try {
-            const { id, note_header, note_content, published, uuid } = req.body;
+            const id = parseInt(req.params.id);
+            const { owner, header, content, published } = req.body;
 
-            const validation = NoteDataValidation(note_header, note_content)
+            const validation = NoteDataValidation(header, content)
             if (!validation.status) {
                 res.status(400).json({ status: false, message: validation.message })
             }
 
-            const noteDTO = await this.noteService.updateNote(new Note(id, uuid, note_header, note_content, published));
+            const oldNote = await this.noteService.getNoteById(id);
+            if (oldNote.id == 0) {
+                res.status(400).json({ status: false, message: "Note not found!" })
+                return;
+            }
+
+
+            const noteDTO = await this.noteService.updateNote(new Note(id, owner, header, content, published));
             if (noteDTO.id !== 0) {
                 res.status(200).json({ status: true, message: "Note updated!" })
             }

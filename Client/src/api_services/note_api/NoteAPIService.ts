@@ -25,7 +25,7 @@ export const noteApi: INoteAPIService = {
         `${API_URL}/getID/${noteId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       console.log("res??" + res)
       return res.data.data;
     } catch (error) {
@@ -34,7 +34,7 @@ export const noteApi: INoteAPIService = {
     }
   },
 
-  async createNote(token: string, note: Partial<NoteDto>): Promise<NoteDto> {
+  async createNote(token: string, note: NoteDto): Promise<NoteDto> {
     try {
       const res = await axios.post<{ success: boolean; message: string; data: NoteDto }>(
         `${API_URL}/create`,
@@ -52,10 +52,10 @@ export const noteApi: INoteAPIService = {
     }
   },
 
-  async updateNote(token: string, noteId: number, note: Partial<NoteDto>): Promise<NoteDto> {
+  async updateNote(token: string, noteId: number, note: NoteDto): Promise<NoteDto> {
     try {
-      const res = await axios.patch<{ success: boolean; message: string; data: NoteDto }>(
-        `${API_URL}/${noteId}`,
+      const res = await axios.post<{ success: boolean; message: string; data: NoteDto }>(
+        `${API_URL}/getID/${noteId}`,
         note,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -69,7 +69,7 @@ export const noteApi: INoteAPIService = {
   async deleteNote(token: string, noteId: number): Promise<NoteDto> {
     try {
       const res = await axios.delete<{ success: boolean; message: string; data: NoteDto }>(
-        `${API_URL}/${noteId}`,
+        `${API_URL}/getID/${noteId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return res.data.data;
