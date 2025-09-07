@@ -15,8 +15,7 @@ export default function Prijava({authApi}: LoginProps) {
 
     useEffect(() => {
     if(isAuthenticated && user) {
-        const u = (user.premium === 0 ? "user" : "premium-user");
-        navigate(`/${u}-dashboard`);
+        navigate(`/user-dashboard`);
     }
     }, [isAuthenticated, navigate, user]);
 
