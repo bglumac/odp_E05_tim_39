@@ -22,9 +22,11 @@ export const noteApi: INoteAPIService = {
   async getNoteById(token: string, noteId: number): Promise<NoteDto> {
     try {
       const res = await axios.get<{ success: boolean; message: string; data: NoteDto }>(
-        `${API_URL}/${noteId}`,
+        `${API_URL}/getID/${noteId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
+      console.log("res??" + res)
       return res.data.data;
     } catch (error) {
       console.error(`Greška prilikom prikazivanja beleške ${noteId}:`, error);

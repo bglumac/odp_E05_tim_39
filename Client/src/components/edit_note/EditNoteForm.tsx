@@ -70,7 +70,7 @@ const EditNoteForm = ({ note, isPremium, onSave}: EditNoteFormProps) => {
             {/* Title */}
             <input
                 type="text"
-                value={title}
+                value={note.header}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Note title..."
                 className="w-full border-b-2 border-[#4451A4] text-2xl px-2 py-1 focus:outline-none mb-4"
@@ -91,7 +91,7 @@ const EditNoteForm = ({ note, isPremium, onSave}: EditNoteFormProps) => {
                     ref={contentRef}
                     contentEditable
                     className="w-full min-h-[400px] p-4 border border-gray-300 rounded resize-none focus:outline-none"
-                    dangerouslySetInnerHTML={{ __html: note.content || "" }}
+                    dangerouslySetInnerHTML={{ __html: note.content || " " }}
                 />
 
                 {images.length > 0 && (

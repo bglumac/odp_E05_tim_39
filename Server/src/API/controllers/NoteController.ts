@@ -16,6 +16,7 @@ export class NoteController {
 
     private initializeRoutes() {
         this.router.get(`/getAll`, authenticate, this.getAll.bind(this))
+        this.router.get(`/getID/:id`, authenticate, this.getID.bind(this))
         this.router.post('/create', authenticate, this.create.bind(this));
         this.router.post('/update', authenticate, this.update.bind(this));
         this.router.post('/delete', authenticate, this.delete.bind(this));
@@ -29,6 +30,23 @@ export class NoteController {
         try {
             if (req.user) {
                 const notes = await this.noteService.getAllUserNotes(req.user?.id);
+                res.status(200).json({ status: true, message: "Fetched!", data: notes })
+            }
+
+            else {
+                res.status(401).json({ status: false, message: "Not logged in!" })
+            }
+
+        }
+
+        catch (err) {
+            res.status(500).json({ status: false, message: err })
+        }
+    }
+    private async getID(req: Request, res: Response) {
+        try {
+            if (req.user) {
+                const notes = await this.noteService.getNoteById(parseInt(req.params.id));
                 res.status(200).json({ status: true, message: "Fetched!", data: notes })
             }
 

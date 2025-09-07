@@ -1,22 +1,63 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import type { NoteDto } from "../../models/notes/NoteDto";
 import SideMenuForm from "../../components/dashboard/SideMenuForm";
 import EditNoteForm from "../../components/edit_note/EditNoteForm";
+import { useAuthHook } from "../../hooks/auth/useAuthHook";
+import { ProcitajVrednostPoKljucu } from "../../helpers/local_storage";
+import type { INoteAPIService } from "../../api_services/note_api/INoteAPIService";
+
+interface EditPageProps {
+    noteApi: INoteAPIService;
+}
 
 const mockNote: NoteDto = {
     id: 1,
+    owner: 1,
     header: "Shopping List",
     content: "Milk, Eggs, Bread, Butter",
+    public: false,
     isPinned: true,
     isSelected: false,
     createdAt: "2025-09-01",
     updatedAt: "2025-09-02",
 };
 
-const EditNotePage = () => {
+
+const EditNotePage = ({ noteApi }: EditPageProps) => {
     const navigate = useNavigate();
+    const params = useParams();
     const [note, setNote] = useState<NoteDto>(mockNote);
+
+    const { isAuthenticated, logout } = useAuthHook();
+    const token = ProcitajVrednostPoKljucu("authToken") || "";
+
+    useEffect(() => {
+        if (!isAuthenticated || !token) {
+            logout();
+            navigate("/login");
+            return;
+        }
+
+        (async () => {
+            try {
+                console.log("fetching??")
+                const noteID = params.noteId;
+                console.log(noteID)
+                if (!noteID) return;
+                const data = await noteApi.getNoteById(token, parseInt(noteID))
+                setNote(data);
+                console.log(data);
+            }
+
+            catch (error) {
+                console.error(error);
+                // logout();
+                navigate("/login");
+            }
+        })()
+
+    }, [isAuthenticated, logout, navigate, token]);
 
     const handleDelete = () => {
         const confirmed = window.confirm("Are you sure you want to delete this note?");
@@ -35,10 +76,10 @@ const EditNotePage = () => {
     };
 
     const handleSaveNote = (updatedNote: NoteDto) => {
-    setNote(updatedNote); // ažurira lokalno
-    // Ovdje kasnije možeš dodati API poziv ako backend postoji
-    navigate("/user-dashboard");
-};
+        setNote(updatedNote); // ažurira lokalno
+        // Ovdje kasnije možeš dodati API poziv ako backend postoji
+        navigate("/user-dashboard");
+    };
 
     return (
         <div className="flex h-screen">
@@ -46,9 +87,9 @@ const EditNotePage = () => {
             <div className="w-64 h-full fixed top-0 left-0">
                 <SideMenuForm
                     selectedCount={1}
-                    onEdit={() => {}}
+                    onEdit={() => { }}
                     onPin={handlePin}
-                    onDuplicate={() => {}}
+                    onDuplicate={() => { }}
                     onShare={handleShare}
                     onDelete={handleDelete}
                 />
@@ -56,7 +97,7 @@ const EditNotePage = () => {
 
             {/* Glavni deo - pomeren desno i skrolabilan */}
             <main className="ml-64 flex-1 h-screen overflow-y-auto p-6">
-                <EditNoteForm note={note} isPremium={true} onSave={handleSaveNote}/>
+                <EditNoteForm note={note} isPremium={true} onSave={handleSaveNote} />
             </main>
         </div>
     );
