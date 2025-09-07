@@ -1,5 +1,5 @@
 import { Request, Response, Router } from "express";
-import { INoteService } from "../../Domain/services/auth/INoteService";
+import { INoteService } from "../../Domain/services/notes/INoteService";
 import { NoteDataValidation } from "../validators/NoteValidator";
 import { Note } from "../../Domain/models/Note";
 
@@ -16,6 +16,7 @@ export class NoteController {
     private initializeRoutes() {
         this.router.post('/create', this.create.bind(this));
         this.router.post('/update', this.update.bind(this));
+        this.router.post('/delete', this.update.bind(this));
     }
 
     private async create(req: Request, res: Response) {

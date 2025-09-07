@@ -8,7 +8,7 @@ export interface INoteRepository {
 
     getAll(): Promise<Note[]>;
 
-    getAllUserNotes(user: User): Promise<Note[]>;
+    getAllUserNotes(id: number): Promise<Note[]>;
 
     update(note: Note): Promise<Note>; 
 

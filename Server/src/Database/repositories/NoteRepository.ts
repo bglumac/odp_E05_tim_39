@@ -4,15 +4,13 @@ import { INoteRepository } from "../../Domain/repositories/notes/INoteRepository
 import { DatabaseConnection } from "../connection/DbConnectionPool";
 
 export class NoteRepository implements INoteRepository {
-    db = DatabaseConnection.Get();
-
     async create(note: Note): Promise<Note> {
         const query = `
             INSERT INTO Notes VALUES (?, ?, ?, ?, ?)
             `
 
         try {
-            const statement = await this.db.prepare(query);
+            const statement = await DatabaseConnection.Get().prepare(query);
             await statement.run(note.id, note.header, note.content, note.published, note.owner)
             return note;
 
@@ -30,7 +28,7 @@ export class NoteRepository implements INoteRepository {
         `
 
         try {
-            const statement = await this.db.prepare(query, id);
+            const statement = await DatabaseConnection.Get().prepare(query, id);
             const result: any = await statement.get();
 
             if (!result) throw new Error("No such record!");
@@ -50,7 +48,7 @@ export class NoteRepository implements INoteRepository {
         `
 
         try {
-            const statement = await this.db.prepare(query);
+            const statement = await DatabaseConnection.Get().prepare(query);
             const results: any[] = await statement.all();
 
             return results.map(
@@ -70,7 +68,7 @@ export class NoteRepository implements INoteRepository {
         `
 
         try {
-            const statement = await this.db.prepare(query, user.id);
+            const statement = await DatabaseConnection.Get().prepare(query, user.id);
             const results: any[] = await statement.all();
 
             return results.map(
@@ -90,7 +88,7 @@ export class NoteRepository implements INoteRepository {
         `
 
         try {
-            const statement = await this.db.prepare(query, note.header, note.content, note.id);
+            const statement = await DatabaseConnection.Get().prepare(query, note.header, note.content, note.id);
             const result = await statement.run();
             console.log(result);
             return note;
@@ -108,7 +106,7 @@ export class NoteRepository implements INoteRepository {
         `
 
         try {
-            const statement = await this.db.prepare(query, id);
+            const statement = await DatabaseConnection.Get().prepare(query, id);
             const result = await statement.run();
 
             if (result.changes == 1) {
@@ -130,7 +128,7 @@ export class NoteRepository implements INoteRepository {
         `
 
         try {
-            const statement = await this.db.prepare(query, id);
+            const statement = await DatabaseConnection.Get().prepare(query, id);
             const result: any = await statement.get();
 
             if (!result) return false;

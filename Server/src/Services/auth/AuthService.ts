@@ -1,3 +1,4 @@
+import { IDGenerator } from "../../API/utils/IDGenerator";
 import { UserAuthDTO } from "../../Domain/DTOs/auth/UserLoginDTO";
 import { User } from "../../Domain/models/User";
 import { IUserRepository } from "../../Domain/repositories/users/IUserRepository";
@@ -30,7 +31,7 @@ export class AuthService implements IAuthService {
         const hashed = await bcrypt.hash(password, this.saltRounds);
 
         const newUser = await this.userRepo.create(
-            new User(Math.random() * (1000 - 1) + 1, username, hashed)
+            new User(IDGenerator(), username, hashed)
         );
 
         if (newUser.id !== 0) {
