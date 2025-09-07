@@ -17,7 +17,6 @@ export default function Prijava({ authApi }: LoginProps) {
 
     useEffect(() => {
         if (isAuthenticated && user) {
-            console.log("AUT");
             navigate(`/user-dashboard`);
         }
 

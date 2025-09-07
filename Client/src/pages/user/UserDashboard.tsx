@@ -52,12 +52,12 @@ export default function DashboardPage({ noteApi }: DashboardPageProps) {
       finally {
         setLoading(false);
       }
-    })
+    })()
 
   }, [isAuthenticated, logout, navigate, token]);
 
   const handleSelectNote = (id: number) => {
-    setNotes(prev => prev.map(note => note.noteId === id ? { ...note, isSelected: !note.isSelected } : note));
+    setNotes(prev => prev.map(note => note.id === id ? { ...note, isSelected: !note.isSelected } : note));
   }
 
   const handlePinNote = async () => {
@@ -65,7 +65,7 @@ export default function DashboardPage({ noteApi }: DashboardPageProps) {
 
     try {
       for (const n of selected) {
-        await noteApi.pinNote(token!, n.noteId, !n.isPinned);
+        await noteApi.pinNote(token!, n.id, !n.isPinned);
       }
 
       const updated = await noteApi.getAllNotes(token!);
@@ -81,7 +81,7 @@ export default function DashboardPage({ noteApi }: DashboardPageProps) {
 
     try {
       for (const n of selected) {
-        await noteApi.createNote(token!, { ...n, noteId: undefined, isSelected: false })
+        await noteApi.createNote(token!, { ...n, id: undefined, isSelected: false })
       }
 
       const updated = await noteApi.getAllNotes(token!);
@@ -97,7 +97,7 @@ export default function DashboardPage({ noteApi }: DashboardPageProps) {
 
     try {
       for (const n of selected) {
-        await noteApi.deleteNote(token!, n.noteId);
+        await noteApi.deleteNote(token!, n.id);
       }
 
       const updated = await noteApi.getAllNotes(token!);
@@ -118,7 +118,7 @@ export default function DashboardPage({ noteApi }: DashboardPageProps) {
         onEdit={() => {
           const noteToEdit = notes.find(n => n.isSelected);
           if (noteToEdit) {
-            navigate(`/edit/${noteToEdit.noteId}`); // vodi na Edit page
+            navigate(`/edit/${noteToEdit.id}`); // vodi na Edit page
           }
         }}
         onPin={handlePinNote}
@@ -177,7 +177,7 @@ export default function DashboardPage({ noteApi }: DashboardPageProps) {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 pl-10 pt-6 pb-6">
               {notes.map(note => (
-                <NoteViewForm key={note.noteId} note={note} onSelect={handleSelectNote} />
+                <NoteViewForm key={note.id} note={note} onSelect={handleSelectNote} />
               ))}
             </div>
           )}
@@ -193,10 +193,12 @@ export default function DashboardPage({ noteApi }: DashboardPageProps) {
                 }
                 // kreiraj belešku na serveru
                 const newNote = await noteApi.createNote(token!, {
-                  noteTitle: "Title",     // iz inputa forme
+                  header: "Title",     // iz inputa forme
                   content: "",     // iz contentEditable ili textarea
                   isPinned: false,   // boolean
                 });
+
+                console.log(newNote)
 
                 setNotes(prevNotes => [...prevNotes, newNote]);
               } catch (err) {

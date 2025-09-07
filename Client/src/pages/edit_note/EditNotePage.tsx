@@ -5,8 +5,8 @@ import SideMenuForm from "../../components/dashboard/SideMenuForm";
 import EditNoteForm from "../../components/edit_note/EditNoteForm";
 
 const mockNote: NoteDto = {
-    noteId: 1,
-    noteTitle: "Shopping List",
+    id: 1,
+    header: "Shopping List",
     content: "Milk, Eggs, Bread, Butter",
     isPinned: true,
     isSelected: false,
@@ -21,7 +21,7 @@ const EditNotePage = () => {
     const handleDelete = () => {
         const confirmed = window.confirm("Are you sure you want to delete this note?");
         if (confirmed) {
-            console.log("Note deleted:", note.noteId);
+            console.log("Note deleted:", note.id);
             navigate("/dashboard");
         }
     };
@@ -31,7 +31,7 @@ const EditNotePage = () => {
     };
 
     const handleShare = () => {
-        alert("Sharing note ID: " + note.noteId);
+        alert("Sharing note ID: " + note.id);
     };
 
     const handleSaveNote = (updatedNote: NoteDto) => {

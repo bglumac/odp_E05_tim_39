@@ -2,13 +2,14 @@ import axios from "axios";
 import type { NoteDto } from "../../models/notes/NoteDto";
 import type { INoteAPIService } from "./INoteAPIService";
 
-const API_URL: string = import.meta.env.VITE_API_URL + "notes";
+const API_URL: string = `http://localhost:8000/api/v1/notes`;
 
 export const noteApi: INoteAPIService = {
-    async getAllNotes(token: string): Promise<NoteDto[]> {
+  async getAllNotes(token: string): Promise<NoteDto[]> {
     try {
+      console.log("Getting notes...")
       const res = await axios.get<{ success: boolean; message: string; data: NoteDto[] }>(
-        `${API_URL}/`,
+        `${API_URL}/getAll`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return res.data.data || [];
@@ -34,13 +35,17 @@ export const noteApi: INoteAPIService = {
   async createNote(token: string, note: Partial<NoteDto>): Promise<NoteDto> {
     try {
       const res = await axios.post<{ success: boolean; message: string; data: NoteDto }>(
-        `${API_URL}/`,
+        `${API_URL}/create`,
         note,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      console.log(res.data.data);
       return res.data.data;
-    } catch (error) {
+    }
+
+    catch (error) {
       console.error("Greška pri kreiranju beleške:", error);
+      console.log(error)
       throw error;
     }
   },

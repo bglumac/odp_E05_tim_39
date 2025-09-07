@@ -10,7 +10,7 @@ interface EditNoteFormProps {
 
 const EditNoteForm = ({ note, isPremium, onSave}: EditNoteFormProps) => {
     const navigate = useNavigate();
-    const [title, setTitle] = useState(note.noteTitle);
+    const [title, setTitle] = useState(note.header);
     const [isPinned, setIsPinned] = useState(note.isPinned);
     const [showSaveConfirm, setShowSaveConfirm] = useState(false);
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -54,7 +54,7 @@ const EditNoteForm = ({ note, isPremium, onSave}: EditNoteFormProps) => {
                     <p className="text-sm text-gray-400">Updated: {note.updatedAt || "N/A"}</p>
                 </div>
                 <div className="flex flex-col items-end">
-                    <span className="text-gray-400 text-sm">ID: {note.noteId}</span>
+                    <span className="text-gray-400 text-sm">ID: {note.id}</span>
                     <label className="flex items-center gap-2 mt-1 font-semibold text-[#4451A4]">
                         <input
                             type="checkbox"

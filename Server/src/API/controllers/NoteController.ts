@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import { INoteService } from "../../Domain/services/notes/INoteService";
 import { NoteDataValidation } from "../validators/NoteValidator";
 import { Note } from "../../Domain/models/Note";
+import { authenticate } from "../../Middleware/AuthenticationMiddleware";
 
 export class NoteController {
     private router: Router;
@@ -14,31 +15,63 @@ export class NoteController {
     }
 
     private initializeRoutes() {
-        this.router.post('/create', this.create.bind(this));
-        this.router.post('/update', this.update.bind(this));
-        this.router.post('/delete', this.update.bind(this));
+        this.router.get(`/getAll`, authenticate, this.getAll.bind(this))
+        this.router.post('/create', authenticate, this.create.bind(this));
+        this.router.post('/update', authenticate, this.update.bind(this));
+        this.router.post('/delete', authenticate, this.delete.bind(this));
+    }
+
+    public getRouter() {
+        return this.router;
+    }
+
+    private async getAll(req: Request, res: Response) {
+        try {
+            if (req.user) {
+                const notes = await this.noteService.getAllUserNotes(req.user?.id);
+                res.status(200).json({ status: true, message: "Fetched!", data: notes })
+            }
+
+            else {
+                res.status(401).json({ status: false, message: "Not logged in!" })
+            }
+
+        }
+
+        catch (err) {
+            res.status(500).json({ status: false, message: err })
+        }
     }
 
     private async create(req: Request, res: Response) {
         try {
-            const { note_header, note_content, uuid } = req.body;
+            const { header, content } = req.body;
+            if (req.user) {
+                const validation = NoteDataValidation(header, content)
+                if (!validation.status) {
+                    res.status(400).json({ status: false, message: validation.message })
+                }
 
-            const validation = NoteDataValidation(note_header, note_content)
-            if (!validation.status) {
-                res.status(400).json({ status: false, message: validation.message })
-            }
+                const noteDTO = await this.noteService.create(req.user.id, header, content);
+                if (noteDTO.id !== 0) {
+                    res.status(200).json({ status: true, message: "Note created!", data: noteDTO })
+                }
 
-            const noteDTO = await this.noteService.create(uuid, note_header, note_content);
-            if (noteDTO.id !== 0) {
-                res.status(200).json({ status: true, message: "Note created!" })
+                else {
+                    console.log("WTH")
+                    res.status(500).json({ status: false, message: "Server error!" })
+                }
             }
 
             else {
-                res.status(500).json({ status: false, message: "Server error!" })
+                res.status(401).json({ status: false, message: "Not logged in!" })
             }
+
+
         }
 
         catch (err) {
+            console.log(err);
             res.status(500).json({ status: false, message: err })
         }
     }

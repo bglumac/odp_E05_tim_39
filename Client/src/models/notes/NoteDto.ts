@@ -1,7 +1,9 @@
 export interface NoteDto {
-    noteId: number;
-    noteTitle: string;
+    id: number;
+    owner: number;
+    header: string;
     content?: string;        //ovde ce biti i imagePath
+    public: boolean
     isPinned?: boolean;
     createdAt?: string; 
     updatedAt?: string; 
