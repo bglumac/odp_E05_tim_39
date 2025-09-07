@@ -69,28 +69,16 @@ export const noteApi: INoteAPIService = {
 
   async deleteNote(token: string, noteId: number): Promise<NoteDto> {
     try {
-      const res = await axios.delete<{ success: boolean; message: string; data: NoteDto }>(
+      console.log("Briseeeeeem")
+      const res = await axios.post<{ success: boolean; message: string; data: NoteDto }>(
         `${API_URL}/getID/${noteId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      console.log("jej obrisao je")
       return res.data.data;
     } catch (error) {
       console.error(`Greška prilikom brisanja beleške ${noteId}:`, error);
       throw error;
     }
   },
-
-  async pinNote(token: string, noteId: number, pinned: boolean): Promise<NoteDto> {
-    try {
-      const res = await axios.patch<{ success: boolean; message: string; data: NoteDto }>(
-        `${API_URL}/${noteId}/pin`,
-        { pinned },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      return res.data.data;
-    } catch (error) {
-      console.error(`Greška prilikom pinovanja beleške ${noteId}:`, error);
-      throw error;
-    }
-  }
 }

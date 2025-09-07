@@ -9,9 +9,6 @@ interface EditPageProps {
 const EditNotePage = ({ noteApi }: EditPageProps) => {
   return (
     <div className="flex h-screen">
-     
-
-      {/* Glavni deo - EditNoteForm upravlja logikom */}
       <main className="ml-64 flex-1 h-screen overflow-y-auto p-6">
         <EditNoteForm noteApi={noteApi} />
       </main>

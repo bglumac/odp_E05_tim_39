@@ -20,6 +20,7 @@ const NoteViewForm: FC<NoteViewFormProps> = ({ noteApi }) => {
   const [loading, setLoading] = useState(true);
   const [showLimitPopup, setShowLimitPopup] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false); 
 
 
   if (!isAuthenticated || !token) {
@@ -28,21 +29,26 @@ const NoteViewForm: FC<NoteViewFormProps> = ({ noteApi }) => {
     return null;
   }
 
-  // Učitavanje svih beleški pri mount-u
+  const fetchNotes = async () => {
+  try {
+    setLoading(true);
+    const data = await noteApi.getAllNotes(token);
+    const sorted = [
+      ...data.filter(n => n.pinned),
+      ...data.filter(n => !n.pinned)
+    ].map(n => ({ ...n, isSelected: false }));
+    setNotes(sorted);
+  } catch (err) {
+    console.error(err);
+    logout();
+    navigate("/login");
+  } finally {
+    setLoading(false);
+  }
+};
+
   useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        const data = await noteApi.getAllNotes(token);
-        setNotes(data.map(n => ({ ...n, isSelected: false })));
-      } catch (err) {
-        console.error(err);
-        logout();
-        navigate("/login");
-      } finally {
-        setLoading(false);
-      }
-    })();
+    fetchNotes();
   }, [noteApi, token]);
 
 
@@ -79,26 +85,38 @@ const NoteViewForm: FC<NoteViewFormProps> = ({ noteApi }) => {
     if (isSingleSelected) navigate(`/edit/${selectedNotes[0].id}`);
   };
 
-  const handlePin = async () => {
-    if (!hasSelection) return;
+const handlePin = async () => {
+  if (!hasSelection) return; // nema selektovanih beleški
 
-    try {
-      setNotes(prev => {
-        const updated = prev.map(n =>
-          n.isSelected ? { ...n, pinned: !n.pinned } : n
-        );
-        // Pinovane idu na početak
-        return [...updated.filter(n => n.pinned), ...updated.filter(n => !n.pinned)];
-      });
+  try {
+    const updatedNotes = await Promise.all(
+      notes.map(async (n) => {
+        if (n.isSelected) {
+          const newPinnedStatus = !n.pinned;
+          // Update na serveru
+          await noteApi.updateNote(token, n.id, {
+            header: n.header,
+            content: n.content,
+            pinned: newPinnedStatus,
+          });
+          return { ...n, pinned: newPinnedStatus };
+        }
+        return n;
+      })
+    );
 
-      for (const n of selectedNotes) {
-        await noteApi.pinNote(token, n.id, !n.pinned);
-        console.log("Pinovan/unpinovan note");
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    // Sortiraj: pinovane idu na vrh
+    const sortedNotes = [
+      ...updatedNotes.filter(n => n.pinned),
+      ...updatedNotes.filter(n => !n.pinned)
+    ];
+
+    setNotes(sortedNotes);
+
+  } catch (err) {
+    console.error("Greška pri pinovanju beleški:", err);
+  }
+};
 
   const handleDuplicate = async () => {
     if (!hasSelection) return;
@@ -122,25 +140,36 @@ const NoteViewForm: FC<NoteViewFormProps> = ({ noteApi }) => {
     }
   };
 
-  const handleDelete = () => setShowDeleteConfirm(true);
+const handleDelete = () => {
+  if (!hasSelection) return;
+  setShowDeleteConfirm(true);
+};
 
-  const confirmDelete = async () => {
-    const notesToDelete = notes.filter(n => n.isSelected);
-    if (notesToDelete.length === 0) return;
+const confirmDelete = async () => {
+  const notesToDelete = notes.filter(n => n.isSelected);
+  if (notesToDelete.length === 0) return;
 
-    try {
-      for (const n of notesToDelete) {
-        await noteApi.deleteNote(token, n.id);
-      }
+  try {
+    setDeleting(true);
 
-      const updated = await noteApi.getAllNotes(token);
+    // Brišemo sve selektovane beleške paralelno
+    await Promise.all(
+      notesToDelete.map(n => noteApi.deleteNote(token, n.id))
+    );
 
-      setNotes(updated.map(n => ({ ...n, isSelected: false })));
-      setShowDeleteConfirm(false);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    // Osvežavamo lokalnu listu odmah
+    setNotes(prev => prev.filter(n => !notesToDelete.some(d => d.id === n.id)));
+
+    setShowDeleteConfirm(false);
+  } catch (err) {
+    console.error("Greška pri brisanju beleške:", err);
+    alert("Greška pri brisanju beleške. Pokušajte ponovo.");
+  } finally {
+    setDeleting(false);
+  }
+};
+
+
 
   const handleLogout = () => {
     ObrisiVrednostPoKljucu("authToken");

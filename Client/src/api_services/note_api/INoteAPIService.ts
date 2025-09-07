@@ -6,5 +6,4 @@ export interface INoteAPIService {
     getNoteById(token: string, noteId: number): Promise<NoteDto>; 
     createNote(token: string, note: Partial<NoteDto>): Promise<NoteDto>; 
     updateNote(token: string, noteId: number, note: Partial<NoteDto>): Promise<NoteDto>; 
-    pinNote(token: string, noteId: number, pinned: boolean): Promise<NoteDto>;
 }
