@@ -28,7 +28,7 @@ export class NoteController {
                 res.status(400).json({ status: false, message: validation.message })
             }
 
-            const noteDTO = await this.noteService.create(note_header, note_content);
+            const noteDTO = await this.noteService.create(uuid, note_header, note_content);
             if (noteDTO.id !== 0) {
                 res.status(200).json({ status: true, message: "Note created!" })
             }
