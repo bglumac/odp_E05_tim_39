@@ -10,7 +10,7 @@ interface EditNoteFormProps {
 }
 
 const EditNoteForm = ({ noteApi }: EditNoteFormProps) => {
-  const { id } = useParams();
+  const { noteId } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuthHook();
   const token = ProcitajVrednostPoKljucu("authToken") || "";
@@ -32,7 +32,7 @@ const EditNoteForm = ({ noteApi }: EditNoteFormProps) => {
 
     const fetchNote = async () => {
       try {
-        const data = await noteApi.getNoteById(token, Number(id));
+        const data = await noteApi.getNoteById(token, Number(noteId));
         setTitle(data.header);
         setContent(data.content ?? "");
         setIsPinned(data.pinned ?? false);
@@ -45,15 +45,15 @@ const EditNoteForm = ({ noteApi }: EditNoteFormProps) => {
     };
 
     fetchNote();
-  }, [id, isAuthenticated, token, logout, navigate, noteApi]);
+  }, [noteId, isAuthenticated, token, logout, navigate, noteApi]);
 
   const handleSave = async () => {
     setSaving(true);
     setError(null);
 
     try {
-      await noteApi.updateNote(token, Number(id), {
-        id: Number(id),
+      await noteApi.updateNote(token, Number(noteId), {
+        id: Number(noteId),
         header: title,
         content,
         pinned: isPinned

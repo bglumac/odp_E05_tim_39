@@ -21,6 +21,7 @@ export const noteApi: INoteAPIService = {
 
   async getNoteById(token: string, noteId: number): Promise<NoteDto> {
     try {
+      console.log("Note id:", noteId)
       const res = await axios.get<{ success: boolean; message: string; data: NoteDto }>(
         `${API_URL}/getID/${noteId}`,
         { headers: { Authorization: `Bearer ${token}` } }
