@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS Notes
   id CHAR NOT NULL,
   header CHAR NOT NULL,
   content CHAR,
+  published INT NOT NULL,
   owner INT NOT NULL,
   FOREIGN KEY (owner) REFERENCES User(uuid)
 );`;

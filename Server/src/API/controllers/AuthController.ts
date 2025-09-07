@@ -3,6 +3,7 @@ import { AuthService } from "../../Services/auth/AuthService";
 import { IAuthService } from "../../Domain/services/auth/IAuthService";
 import jwt from "jsonwebtoken";
 import { AuthDataValidation } from "../validators/RegisterValidator";
+import { permission } from "process";
 
 export class AuthController {
     private router: Router;
@@ -16,26 +17,67 @@ export class AuthController {
 
     private initializeRoutes() {
         this.router.post('/login', this.login.bind(this));
-        this.router.post('/register', this.registracija.bind(this));
+        this.router.post('/register', this.register.bind(this));
     }
 
-    private async login(req: Request, res: Response) {
+    public getRouter(): Router {
+        return this.router;
+    }
+
+    /**
+     * POST /api/v1/auth/register
+     *
+     * @param req Request header
+     * @param res Response var
+     */
+    private async register(req: Request, res: Response): Promise<void> {
+        try {
+            const { username, password } = req.body;
+            const validation = AuthDataValidation(username, password);
+
+            if (!validation.status) {
+                res.status(400).json({ status: false, message: validation.message })
+            }
+
+            const userDTO = await this.authService.registracija(username, password);
+
+            if (userDTO.id !== 0) {
+                res.status(201).json({ status: true, message: 'Successful register!' })
+            }
+
+            else {
+                res.status(401).json({ status: false, message: 'User already exists!' })
+            }
+        }
+
+        catch (err) {
+            res.status(500).json({ status: false, message: err })
+        }
+    }
+
+    /**
+     * POST /api/v1/auth/login
+     *
+     * @param req Request header
+     * @param res Response var
+     */
+    private async login(req: Request, res: Response): Promise<void> {
         const {username, password } = req.body;
-        
+
         const validation = AuthDataValidation(username, password);
         if (!validation.status) {
             res.status(400).json( { status: false, message: validation.message })
             return;
         }
 
+        const userDTO = await this.authService.prijava(username, password);
+
         const token = jwt.sign(
             {
-                id: 
-            }
+                id: userDTO.id,
+                username: userDTO.username,
+                permission: userDTO.permission
+            }, process.env.JWT_SECRET ?? "", {expiresIn: '12h' }
         )
-    }
-
-    private async registracija() {
-
     }
 }
