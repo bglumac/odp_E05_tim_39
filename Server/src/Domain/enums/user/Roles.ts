@@ -1,5 +1,5 @@
 export enum UserRole {
     INVALID = -1,
     USER = 0,
-    PREMIUM = 10,
+    PREMIUM = 1,
 }
