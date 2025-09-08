@@ -181,16 +181,12 @@ const NoteViewForm: FC<NoteViewFormProps> = ({ noteApi }) => {
   const note = selectedNotes[0];
 
   try {
-    // 1. Update beleške: published = 1
     if (!note.published) {
       const updatedNote = await noteApi.updateNote(token, note.id, { ...note, published: true });
-      // lokalno osvežavanje note-a
       setNotes(prev =>
         prev.map(n => (n.id === note.id ? { ...n, published: true } : n))
       );
     }
-
-    // 2. Generiši link ka readonly stranici
     const link = `${window.location.origin}/notes/${note.id}/readonly`;
     setShareLink(link);
     setShowSharePopup(true);

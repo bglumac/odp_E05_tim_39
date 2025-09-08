@@ -11,7 +11,7 @@ interface EditNoteFormProps {
 const EditNoteForm = ({ noteApi }: EditNoteFormProps) => {
     const { noteId } = useParams();
     const navigate = useNavigate();
-    const { isAuthenticated, logout, user } = useAuthHook();
+    const { isAuthenticated, logout } = useAuthHook();
     const token = ProcitajVrednostPoKljucu("authToken") || "";
 
     const [loading, setLoading] = useState(true);
@@ -21,7 +21,7 @@ const EditNoteForm = ({ noteApi }: EditNoteFormProps) => {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [isPinned, setIsPinned] = useState(false);
-    const [image, setImage] = useState<File | null>(null);
+    //const [image, setImage] = useState<File | null>(null);
 
 
     useEffect(() => {
@@ -54,9 +54,9 @@ const EditNoteForm = ({ noteApi }: EditNoteFormProps) => {
 
         try {
             const noteUpdate: any = { header: title, content, pinned: isPinned };
-            if (image && user?.permission === 1) {
-                noteUpdate.image = image;
-            }
+            // if (image && user?.permission === 1) {
+            //     noteUpdate.image = image;
+            // }
             await noteApi.updateNote(token, Number(noteId), noteUpdate);
             navigate("/user-dashboard");
         } catch (err) {
@@ -67,11 +67,11 @@ const EditNoteForm = ({ noteApi }: EditNoteFormProps) => {
         }
     };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setImage(e.target.files[0]);
-        }
-    };
+    // const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     if (e.target.files && e.target.files[0]) {
+    //         setImage(e.target.files[0]);
+    //     }
+    // };
 
     if (loading) return <div className="text-center mt-10">Loading...</div>;
 
