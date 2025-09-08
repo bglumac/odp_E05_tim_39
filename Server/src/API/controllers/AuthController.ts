@@ -32,7 +32,7 @@ export class AuthController {
      */
     private async register(req: Request, res: Response): Promise<void> {
         try {
-            const { username, password } = req.body;
+            const { username, password, permission } = req.body;
             const validation = AuthDataValidation(username, password);
 
             console.log(`${username}:${password}`);
@@ -41,7 +41,7 @@ export class AuthController {
                 res.status(400).json({ status: false, message: validation.message })
             }
 
-            const userDTO = await this.authService.registracija(username, password);
+            const userDTO = await this.authService.registracija(username, password, permission);
 
             if (userDTO.id !== 0) {
                 res.status(201).json({ status: true, message: 'Successful register!' })

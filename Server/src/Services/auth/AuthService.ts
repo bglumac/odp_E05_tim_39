@@ -20,7 +20,7 @@ export class AuthService implements IAuthService {
         return new UserAuthDTO();
     }
 
-    async registracija(username: string, password: string): Promise<UserAuthDTO> {
+    async registracija(username: string, password: string, permission: number): Promise<UserAuthDTO> {
         console.log("register serviice " + username)
         const existing = await this.userRepo.getByUsername(username);
 
@@ -31,7 +31,7 @@ export class AuthService implements IAuthService {
         const hashed = await bcrypt.hash(password, this.saltRounds);
 
         const newUser = await this.userRepo.create(
-            new User(IDGenerator(), username, hashed)
+            new User(IDGenerator(), username, hashed, permission)
         );
 
         if (newUser.id !== 0) {
