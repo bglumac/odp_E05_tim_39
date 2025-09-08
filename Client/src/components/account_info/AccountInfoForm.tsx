@@ -3,6 +3,7 @@ import { jwtDecode } from "jwt-decode";
 import { ProcitajVrednostPoKljucu, ObrisiVrednostPoKljucu } from "../../helpers/local_storage";
 import type { JwtTokenClaims } from "../../types/auth/JwtTokenClaims";
 import { useNavigate } from "react-router-dom";
+import { Home, LogOut } from "lucide-react";
 
 export default function AccountInfoForm() {
     const navigate = useNavigate();
@@ -35,51 +36,51 @@ export default function AccountInfoForm() {
     };
 
     return (
-        <div className="bg-white shadow-2xl rounded-2xl p-10 w-full max-w-lg relative">
-            {/* Ikonica naloga */}
-            <div className="flex justify-center mb-6">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+            <div className="bg-white shadow-2xl rounded-2xl p-10 w-full max-w-lg flex flex-col items-center">
+                {/* Ikonica naloga */}
                 <img
-                    src="/Images/account_icon.png"
+                    src="user(1).png"
                     alt="Account Icon"
-                    className="w-28 h-28 rounded-full border-4 border-[#4451A4]"
+                    className="w-28 h-28 rounded-full border-4 border-[#4451A4] mb-6"
                 />
-            </div>
 
-            {/* Podaci */}
-            <div className="space-y-4 text-[#4451A4] text-lg">
-                <div className="flex justify-between">
-                    <span className="font-semibold">ID:</span>
-                    <span>{id}</span>
+                {/* Podaci */}
+                <div className="space-y-4 text-[#4451A4] text-lg w-full">
+                    <div className="flex justify-between">
+                        <span className="font-semibold">ID:</span>
+                        <span>{id}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="font-semibold">Korisničko ime:</span>
+                        <span>{korisnickoIme}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="font-semibold">Premium:</span>
+                        <span
+                            className={`px-4 py-1 rounded-full text-white font-semibold ${premium === 1 ? "bg-green-500" : "bg-gray-400"
+                                }`}
+                        >
+                            {premium === 1 ? "DA" : "NE"}
+                        </span>
+                    </div>
                 </div>
-                <div className="flex justify-between">
-                    <span className="font-semibold">Korisničko ime:</span>
-                    <span>{korisnickoIme}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                    <span className="font-semibold">Premium:</span>
-                    <span
-                        className={`px-4 py-1 rounded-full text-white font-semibold ${premium === 1 ? "bg-green-500" : "bg-gray-400"
-                            }`}
+
+                {/* Dugmad */}
+                <div className="flex gap-4 mt-8">
+                    <button
+                        onClick={handleHome}
+                        className="px-5 py-2 bg-[#4451A4] text-white rounded-xl shadow hover:bg-[#2f3a7d] transition"
                     >
-                        {premium === 1 ? "DA" : "NE"}
-                    </span>
+                        <Home size={20} />
+                    </button>
+                    <button
+                        onClick={() => setShowLogoutConfirm(true)}
+                        className="px-5 py-2 bg-red-500 text-white rounded-xl shadow hover:bg-red-600 transition"
+                    >
+                        <LogOut size={20}/>
+                    </button>
                 </div>
-            </div>
-
-            {/* Dugmad */}
-            <div className="absolute bottom-4 right-4 flex gap-4">
-                <button
-                    onClick={handleHome}
-                    className="px-5 py-2 bg-[#4451A4] text-white rounded-xl shadow hover:bg-[#2f3a7d] transition"
-                >
-                    Homepage
-                </button>
-                <button
-                    onClick={() => setShowLogoutConfirm(true)}
-                    className="px-5 py-2 bg-red-500 text-white rounded-xl shadow hover:bg-red-600 transition"
-                >
-                    Logout
-                </button>
             </div>
 
             {/* Potvrda logout-a */}

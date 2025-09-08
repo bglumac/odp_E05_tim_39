@@ -27,7 +27,7 @@ const UserDashboard: FC<UserDashboardProps> = ({ noteApi }) => {
      
       <main className="flex-1 p-6 flex flex-col ml-[244px]">
         <h1 className="text-3xl md:text-4xl font-bold text-[#4451A4] mb-12 ml-6 ">
-          Welcome back, {user?.username}!
+          Welcome, {user?.username}!
         </h1>
 
         {/* Komponenta koja prikazuje sve beleške i dugme za dodavanje */}

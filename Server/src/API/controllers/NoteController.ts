@@ -136,7 +136,7 @@ export class NoteController {
 
     private async delete(req: Request, res: Response) {
         try {
-            const { id } = req.body;
+            const id = parseInt(req.params.id);
 
             const result = await this.noteService.deleteNote(id);
             if (result === true) {
@@ -149,6 +149,7 @@ export class NoteController {
         }
 
         catch (err) {
+            console.log(err)
             res.status(500).json({ status: false, message: err })
         }
     }

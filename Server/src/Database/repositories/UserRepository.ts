@@ -33,7 +33,6 @@ export class UserRepository implements IUserRepository {
         try {
             const statement = await DatabaseConnection.Get().prepare(query, id);
             const result: any = await statement.get();
-
             if (!result) throw new Error("No such record!");
 
             return new User(result.uuid, result.username, result.password, result.permission)

@@ -10,7 +10,7 @@ export const authApi: IAuthAPIService = {
             const res = await axios.post<AuthResponse>(`${API_URL}/login`, {
                 username: korisnickoIme,
                 password: lozinka,
-                permission: 0
+                //permission: 0
             });
 
             return res.data;
@@ -36,7 +36,7 @@ export const authApi: IAuthAPIService = {
             const res = await axios.post<AuthResponse>(`${API_URL}/register`, {
                 username: korisnickoIme,
                 password: lozinka,
-                premium
+                permission: premium
             });
 
             return res.data;

@@ -8,44 +8,56 @@ import UserDashboard from "./pages/user/UserDashboard";
 import EditNotePage from "./pages/edit_note/EditNotePage";
 import { noteApi } from "./api_services/note_api/NoteAPIService";
 import AccountInfoForm from "./components/account_info/AccountInfoForm";
+import ReadOnlyPage from "./pages/read_only/ReadOnlyPage";
 
 
 function App() {
-  return(
+  return (
     <Routes>
-      
+
       <Route path="/login" element={<Prijava authApi={authApi} />} />
-      <Route path="/register" element={<RegistracijaPage authApi={authApi} />} /> 
+      <Route path="/register" element={<RegistracijaPage authApi={authApi} />} />
       <Route path="/404" element={<PageNotFound />} />
 
       {/*User dashboard */}
-      <Route 
+      <Route
         path="/user-dashboard"
         element={
           <ProtectedRoute>
             <UserDashboard noteApi={noteApi} />
           </ProtectedRoute>
-        }/> 
+        } />
 
-        {/*EditPage ruta*/}
-        <Route 
+      {/*EditPage ruta*/}
+      <Route
         path="/edit/:noteId"
         element={
           <ProtectedRoute>
             <EditNotePage noteApi={noteApi} />
           </ProtectedRoute>
         }
-        />
+      />
 
-        {/*Account info ruta */}
-        <Route 
-          path="/account"
-          element={
-            <ProtectedRoute>
-              <AccountInfoForm/>
-            </ProtectedRoute>
-          }
-        />
+      {/* Share ruta */}
+      <Route
+        path="/notes/:noteId/readonly"
+        element={<ProtectedRoute>
+          <ReadOnlyPage noteApi={noteApi} />
+        </ProtectedRoute>
+
+        }
+      />
+
+
+      {/*Account info ruta */}
+      <Route
+        path="/account"
+        element={
+          <ProtectedRoute>
+            <AccountInfoForm />
+          </ProtectedRoute>
+        }
+      />
 
       {/*Default ruta*/}
       <Route path="/" element={<Navigate to="/login" replace />} />
@@ -54,6 +66,6 @@ function App() {
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   );
-} 
+}
 
 export default App;

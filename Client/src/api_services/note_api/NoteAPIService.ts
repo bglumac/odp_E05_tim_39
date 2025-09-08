@@ -70,7 +70,7 @@ export const noteApi: INoteAPIService = {
   async deleteNote(token: string, noteId: number): Promise<NoteDto> {
     try {
       console.log("Briseeeeeem")
-      const res = await axios.post<{ success: boolean; message: string; data: NoteDto }>(
+      const res = await axios.delete<{ success: boolean; message: string; data: NoteDto }>(
         `${API_URL}/getID/${noteId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );

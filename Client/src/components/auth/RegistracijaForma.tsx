@@ -1,39 +1,44 @@
 import { useState } from "react";
 import type { AuthFormProps } from "../../types/props/auth_form_props/AuthFormProps";
-import { useAuthHook } from "../../hooks/auth/useAuthHook";
 import { validacijaPodatakaAuth } from "../../api_services/validators/auth/AuthValidator";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 export function RegistracijaForma({ authApi }: AuthFormProps) {
+  const navigate = useNavigate();
+
   const [korisnickoIme, setKorisnickoIme] = useState("");
   const [lozinka, setLozinka] = useState("");
   const [premium, setPremium] = useState<number>(0);      //0 - user, 1 - premium
   const [greska, setGreska] = useState("");
   const [prikaziLozinku, setPrikaziLozinku] = useState(false);
-  const { login } = useAuthHook();
+
 
   const podnesiFormu = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const validacija = validacijaPodatakaAuth(korisnickoIme, lozinka);
-
     if (!validacija.uspesno) {
       setGreska(validacija.poruka ?? "Neispravni podaci");
       return;
     }
 
-    const odgovor = await authApi.registracija(korisnickoIme, lozinka, premium);
+    try {
+      const odgovor = await authApi.registracija(korisnickoIme, lozinka, premium);
 
-    if (odgovor.success && odgovor.data) {
-      login(odgovor.data.token);
-    }
-    else {
-      setGreska(odgovor.message);
-      setKorisnickoIme("");
-      setLozinka("");
+      if (odgovor.status) {
+        navigate("/login")
+      } else {
+        setGreska(odgovor.message || "Greška pri registraciji");
+        setKorisnickoIme("");
+        setLozinka("");
+      }
+    } catch (err) {
+      console.error("Greška prilikom registracije:", err);
+      setGreska("Došlo je do greške. Pokušajte ponovo.");
     }
   };
+
 
 
   return (

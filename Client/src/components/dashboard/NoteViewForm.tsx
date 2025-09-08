@@ -15,12 +15,18 @@ const NoteViewForm: FC<NoteViewFormProps> = ({ noteApi }) => {
   const { isAuthenticated, logout, user } = useAuthHook();
   const navigate = useNavigate();
   const token = ProcitajVrednostPoKljucu("authToken") || "";
-
   const [notes, setNotes] = useState<NoteDto[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [showLimitPopup, setShowLimitPopup] = useState(false);
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false); 
+  const [deleting, setDeleting] = useState(false);
+
+  const [showSharePopup, setShowSharePopup] = useState(false);
+  const [shareLink, setShareLink] = useState<string>("");
+
+  const [copiedMessage, setCopiedMessage] = useState(false);
 
 
   if (!isAuthenticated || !token) {
@@ -30,22 +36,22 @@ const NoteViewForm: FC<NoteViewFormProps> = ({ noteApi }) => {
   }
 
   const fetchNotes = async () => {
-  try {
-    setLoading(true);
-    const data = await noteApi.getAllNotes(token);
-    const sorted = [
-      ...data.filter(n => n.pinned),
-      ...data.filter(n => !n.pinned)
-    ].map(n => ({ ...n, isSelected: false }));
-    setNotes(sorted);
-  } catch (err) {
-    console.error(err);
-    logout();
-    navigate("/login");
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      const data = await noteApi.getAllNotes(token);
+      const sorted = [
+        ...data.filter(n => n.pinned),
+        ...data.filter(n => !n.pinned)
+      ].map(n => ({ ...n, isSelected: false }));
+      setNotes(sorted);
+    } catch (err) {
+      console.error(err);
+      logout();
+      navigate("/login");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchNotes();
@@ -85,38 +91,38 @@ const NoteViewForm: FC<NoteViewFormProps> = ({ noteApi }) => {
     if (isSingleSelected) navigate(`/edit/${selectedNotes[0].id}`);
   };
 
-const handlePin = async () => {
-  if (!hasSelection) return; // nema selektovanih beleški
+  const handlePin = async () => {
+    if (!hasSelection) return; // nema selektovanih beleški
 
-  try {
-    const updatedNotes = await Promise.all(
-      notes.map(async (n) => {
-        if (n.isSelected) {
-          const newPinnedStatus = !n.pinned;
-          // Update na serveru
-          await noteApi.updateNote(token, n.id, {
-            header: n.header,
-            content: n.content,
-            pinned: newPinnedStatus,
-          });
-          return { ...n, pinned: newPinnedStatus };
-        }
-        return n;
-      })
-    );
+    try {
+      const updatedNotes = await Promise.all(
+        notes.map(async (n) => {
+          if (n.isSelected) {
+            const newPinnedStatus = !n.pinned;
+            // Update na serveru
+            await noteApi.updateNote(token, n.id, {
+              header: n.header,
+              content: n.content,
+              pinned: newPinnedStatus,
+            });
+            return { ...n, pinned: newPinnedStatus };
+          }
+          return n;
+        })
+      );
 
-    // Sortiraj: pinovane idu na vrh
-    const sortedNotes = [
-      ...updatedNotes.filter(n => n.pinned),
-      ...updatedNotes.filter(n => !n.pinned)
-    ];
+      // Sortiraj: pinovane idu na vrh
+      const sortedNotes = [
+        ...updatedNotes.filter(n => n.pinned),
+        ...updatedNotes.filter(n => !n.pinned)
+      ];
 
-    setNotes(sortedNotes);
+      setNotes(sortedNotes);
 
-  } catch (err) {
-    console.error("Greška pri pinovanju beleški:", err);
-  }
-};
+    } catch (err) {
+      console.error("Greška pri pinovanju beleški:", err);
+    }
+  };
 
   const handleDuplicate = async () => {
     if (!hasSelection) return;
@@ -140,34 +146,67 @@ const handlePin = async () => {
     }
   };
 
-const handleDelete = () => {
-  if (!hasSelection) return;
-  setShowDeleteConfirm(true);
-};
+  const handleDelete = () => {
+    if (!hasSelection) return;
+    setShowDeleteConfirm(true);
+  };
 
-const confirmDelete = async () => {
-  const notesToDelete = notes.filter(n => n.isSelected);
-  if (notesToDelete.length === 0) return;
+  const confirmDelete = async () => {
+    const notesToDelete = notes.filter(n => n.isSelected);
+    if (notesToDelete.length === 0) return;
+
+    try {
+      setDeleting(true);
+
+      // Brišemo sve selektovane beleške paralelno
+      await Promise.all(
+        notesToDelete.map(n => noteApi.deleteNote(token, n.id))
+      );
+
+      // Osvežavamo lokalnu listu odmah
+      setNotes(prev => prev.filter(n => !notesToDelete.some(d => d.id === n.id)));
+
+      setShowDeleteConfirm(false);
+    } catch (err) {
+      console.error("Greška pri brisanju beleške:", err);
+      alert("Greška pri brisanju beleške. Pokušajte ponovo.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleShare = async () => {
+  if (!isSingleSelected) return; // samo ako je jedna beleška selektovana
+
+  const note = selectedNotes[0];
 
   try {
-    setDeleting(true);
+    // 1. Update beleške: published = 1
+    if (!note.published) {
+      const updatedNote = await noteApi.updateNote(token, note.id, { ...note, published: true });
+      // lokalno osvežavanje note-a
+      setNotes(prev =>
+        prev.map(n => (n.id === note.id ? { ...n, published: true } : n))
+      );
+    }
 
-    // Brišemo sve selektovane beleške paralelno
-    await Promise.all(
-      notesToDelete.map(n => noteApi.deleteNote(token, n.id))
-    );
+    // 2. Generiši link ka readonly stranici
+    const link = `${window.location.origin}/notes/${note.id}/readonly`;
+    setShareLink(link);
+    setShowSharePopup(true);
 
-    // Osvežavamo lokalnu listu odmah
-    setNotes(prev => prev.filter(n => !notesToDelete.some(d => d.id === n.id)));
-
-    setShowDeleteConfirm(false);
   } catch (err) {
-    console.error("Greška pri brisanju beleške:", err);
-    alert("Greška pri brisanju beleške. Pokušajte ponovo.");
-  } finally {
-    setDeleting(false);
+    console.error("Greška pri deljenju beleške:", err);
+    alert("Došlo je do greške prilikom deljenja beleške. Pokušajte ponovo.");
   }
 };
+
+const copyToClipboard = () => {
+  navigator.clipboard.writeText(shareLink);
+  setCopiedMessage(true);
+  setTimeout(() => setCopiedMessage(false), 2000);
+};
+
 
 
 
@@ -205,8 +244,8 @@ const confirmDelete = async () => {
           </button>
 
           <button
-            onClick={() => alert("Share feature not implemented")}
-            disabled={!hasSelection}
+            onClick={handleShare}
+            disabled={!isSingleSelected}
             className={`flex items-center gap-2 bg-white text-[#4451A4] rounded-md px-4 py-2 font-medium w-[180px] transition ${!hasSelection ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
           >
             <Share2 size={18} /> Share
@@ -318,6 +357,37 @@ const confirmDelete = async () => {
                 className="px-4 py-2 border border-gray-400 text-gray-700 rounded-lg hover:bg-gray-100 transition"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSharePopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white p-6 rounded-xl shadow-xl w-96 text-center">
+            <h2 className="text-lg font-semibold text-[#4451A4] mb-4">Share Note</h2>
+            <input
+              type="text"
+              value={shareLink}
+              readOnly
+              className="w-full p-2 border border-gray-300 rounded mb-4 text-sm text-gray-700 cursor-not-allowed"
+            />
+            {copiedMessage && (
+              <p className="text-green-600 text-sm mb-2">Link kopiran!</p>
+            )}
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={copyToClipboard}
+                className="px-4 py-2 bg-[#4451A4] text-white rounded hover:bg-[#2b2b7a] transition flex items-center gap-2"
+              >
+                <Copy size={16} /> Copy
+              </button>
+              <button
+                onClick={() => setShowSharePopup(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition"
+              >
+                Close
               </button>
             </div>
           </div>
