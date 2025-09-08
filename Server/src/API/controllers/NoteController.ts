@@ -19,7 +19,7 @@ export class NoteController {
     }
 
     private initializeRoutes() {
-        this.router.get(`/getAll`, authenticate, authorize_note_read(this.noteService), this.getAll.bind(this))
+        this.router.get(`/getAll`, authenticate, this.getAll.bind(this))
         this.router.get(`/getID/:id`, authenticate, authorize_note_read(this.noteService), this.getID.bind(this))
         this.router.patch(`/getID/:id`, authenticate, authorize_note_read_write(this.noteService), this.update.bind(this))
         this.router.delete(`/getID/:id`, authenticate, authorize_note_read_write(this.noteService), this.delete.bind(this))
@@ -50,6 +50,7 @@ export class NoteController {
             res.status(500).json({ status: false, message: err })
         }
     }
+
     private async getID(req: Request, res: Response) {
         try {
             if (req.user) {

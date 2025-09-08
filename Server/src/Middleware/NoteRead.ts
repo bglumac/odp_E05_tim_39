@@ -6,6 +6,7 @@ export const authorize_note_read = (noteService: INoteService) => {
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const user = req.user;
         if (isNaN(parseInt(req.params.id))) {
+            console.log(req.params)
             res.status(400).json({ success: false, message: "No param id"})
             return;
         }

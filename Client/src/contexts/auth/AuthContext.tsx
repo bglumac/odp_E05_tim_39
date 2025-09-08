@@ -11,8 +11,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const decodeJwt = (token: string): JwtTokenClaims | null => {
     try {
         const decoded = jwtDecode<JwtTokenClaims>(token);
+        console.log(decoded);
 
-        if(decoded.id && decoded.username && decoded.permission) {
+        if(decoded.id && decoded.username && decoded.permission != null) {
             return {
                 id: decoded.id,
                 username: decoded.username,
@@ -89,6 +90,8 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({children}) => {
         }
         else {
             console.error('Nevazeci/istekao token.');
+            setToken(null);
+            setUser(null);
         }
     };
 
