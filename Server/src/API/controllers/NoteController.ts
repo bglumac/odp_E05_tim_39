@@ -3,6 +3,10 @@ import { INoteService } from "../../Domain/services/notes/INoteService";
 import { NoteDataValidation } from "../validators/NoteValidator";
 import { Note } from "../../Domain/models/Note";
 import { authenticate } from "../../Middleware/AuthenticationMiddleware";
+import { authorize } from "../../Middleware/AuthorizationMiddleware";
+import { UserRole } from "../../Domain/enums/user/Roles";
+import { authorize_note_read } from "../../Middleware/NoteRead";
+import { authorize_note_read_write } from "../../Middleware/NoteReadWrite";
 
 export class NoteController {
     private router: Router;
@@ -15,14 +19,14 @@ export class NoteController {
     }
 
     private initializeRoutes() {
-        this.router.get(`/getAll`, authenticate, this.getAll.bind(this))
-        this.router.get(`/getID/:id`, authenticate, this.getID.bind(this))
-        this.router.patch(`/getID/:id`, authenticate, this.update.bind(this))
-        this.router.delete(`/getID/:id`, authenticate, this.delete.bind(this))
+        this.router.get(`/getAll`, authenticate, authorize_note_read(this.noteService), this.getAll.bind(this))
+        this.router.get(`/getID/:id`, authenticate, authorize_note_read(this.noteService), this.getID.bind(this))
+        this.router.patch(`/getID/:id`, authenticate, authorize_note_read_write(this.noteService), this.update.bind(this))
+        this.router.delete(`/getID/:id`, authenticate, authorize_note_read_write(this.noteService), this.delete.bind(this))
 
-        this.router.post('/create', authenticate, this.create.bind(this));
-        this.router.post('/update', authenticate, this.update.bind(this));
-        this.router.post('/delete', authenticate, this.delete.bind(this));
+        this.router.post('/create', authenticate, authorize(UserRole.USER, UserRole.PREMIUM), this.create.bind(this));
+        this.router.post('/update', authenticate, authorize(UserRole.USER, UserRole.PREMIUM), this.update.bind(this));
+        this.router.post('/delete', authenticate, authorize(UserRole.USER, UserRole.PREMIUM),this.delete.bind(this));
     }
 
     public getRouter() {
