@@ -5,7 +5,7 @@ import type { INoteAPIService } from "../../api_services/note_api/INoteAPIServic
 import EditNoteTogetherForm from "../../components/edit_note/EditNoteTogetherForm";
 import { connectSocket } from "../../helpers/socket_helper";
 import { ProcitajVrednostPoKljucu } from "../../helpers/local_storage";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface EditNoteTogetherProps {
   noteApi: INoteAPIService;
@@ -15,13 +15,21 @@ const EditNoteTogether = ({ noteApi }: EditNoteTogetherProps) => {
   const { noteId } = useParams();
   const [socket, setSocket] = useState<Socket | null>(null);
   const token = ProcitajVrednostPoKljucu("authToken") || "";
+  const navigate = useNavigate();
 
   useEffect(() => {
     let activeSocket: Socket | null = null;
     console.log("twice test")
 
     const init = async () => {
-      activeSocket = await connectSocket(token, Number(noteId));
+      try {
+        activeSocket = await connectSocket(token, Number(noteId));
+      }
+
+      catch (err) {
+        navigate("/user-dashboard")
+      }
+      
       setSocket(activeSocket);
     };
 

@@ -111,10 +111,10 @@ export class NoteController {
             const id = parseInt(req.params.id);
             const { owner, header, content, pinned, published } = req.body;
 
-            console.log("Updating to " + content);
             const validation = NoteDataValidation(header, content)
             if (!validation.status) {
                 res.status(400).json({ status: false, message: validation.message })
+                return;
             }
 
             const oldNote = await this.noteService.getNoteById(id);
@@ -127,10 +127,12 @@ export class NoteController {
             const noteDTO = await this.noteService.updateNote(new Note(id, owner, header, content, pinned, published));
             if (noteDTO.id !== 0) {
                 res.status(200).json({ status: true, message: "Note updated!" })
+                return;
             }
 
             else {
                 res.status(500).json({ status: false, message: "Server error!" })
+                return;
             }
         }
 

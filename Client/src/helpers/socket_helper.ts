@@ -33,6 +33,10 @@ const connectSocket = (token: string, room: Number) => {
       clearTimeout(timeout);
       reject(err);
     });
+
+    socket.on("disconnect", () => {
+      connection = null;
+    })
   });
 }
 

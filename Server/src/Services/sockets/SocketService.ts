@@ -61,7 +61,7 @@ export class SocketService implements ISocketService {
             socket.on("update-text", (data) => {
                 const room = Array.from(socket.rooms).filter(id => id !== socket.id)[0];
                 if (room == null) {
-                    // Something wrong, discconect, handle appropriatelly
+                    // Something wrong, disconnect, handle appropriatelly
                     socket.disconnect(true);
                     console.log("Room null disconnect!");
                 }
@@ -74,8 +74,6 @@ export class SocketService implements ISocketService {
                         const [newValue] = applyPatches(data, current);
                         socket.to(room).emit("update-text", data)
                         this.masterCopies.set(room, newValue);
-                        console.log(current);
-                        console.log(newValue)
                 }
 
                 catch (err) {
@@ -89,7 +87,7 @@ export class SocketService implements ISocketService {
                 for (let room of rooms) {
                     let note = await this.noteRepo.getByID(Number(room));
                     if (note.owner == socket.data.user.id) {
-                        // disconnect everybody in that room
+                        // If owner disconnects, disconnect everybody
                         this.io.in(room).disconnectSockets(true);
                         console.log("Owner left, disconnected everybody in room " + room);
                     }
@@ -98,10 +96,8 @@ export class SocketService implements ISocketService {
 
         });
 
-        // If owner disconnects, disconnect everybody
-
+        
         this.httpServer.listen(3000);
         console.log("Socket sercice on port 3000!")
     }
-
 }

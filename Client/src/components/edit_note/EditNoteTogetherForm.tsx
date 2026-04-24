@@ -62,6 +62,11 @@ const EditNoteTogetherForm = ({ noteApi, socket }: EditNoteTogetherFormProps) =>
             });
         })
 
+        socket.on("disconnect", () => {
+            navigate("/user-dashboard");
+            return;
+        })
+
         // Sync
         socket.on("sync-text", (data) => {
             console.log("Forced sync!");
@@ -70,6 +75,22 @@ const EditNoteTogetherForm = ({ noteApi, socket }: EditNoteTogetherFormProps) =>
         })
 
         socket.emit("request-sync");
+
+        const fetchNote = async () => {
+            try {
+                const data = await noteApi.getNoteById(token, Number(noteId));
+                setTitle(data.header);
+                setOwner(data.owner);
+
+            } catch (err) {
+                console.error(err);
+                navigate("/user-dashboard");
+            } finally {
+
+            }
+        };
+
+        fetchNote();
     }, [noteId, isAuthenticated, token, logout, navigate, noteApi]);
 
     const handleSave = async () => {
@@ -131,14 +152,16 @@ const EditNoteTogetherForm = ({ noteApi, socket }: EditNoteTogetherFormProps) =>
 
             {/* Dugmici Save/Cancel desno */}
             <div className="flex justify-end gap-4 mt-2">
-                <button
-                    onClick={handleSave}
-                    disabled={saving && user?.id == owner}
-                    className={`px-4 py-2 rounded text-white ${saving ? "bg-gray-400" : "bg-[#4451A4] hover:bg-[#3b4699]"
-                        }`}
-                >
-                    {saving ? "Saving..." : "Save"}
-                </button>
+                {/* Only show the save button if the user is the owner */}
+                {user?.id == owner && (
+                    <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className={`px-4 py-2 rounded text-white ${saving ? "bg-gray-400" : "bg-[#4451A4] hover:bg-[#3b4699]"}`}
+                    >
+                        {saving ? "Saving..." : "Save"}
+                    </button>
+                )}
                 <button
                     onClick={() => navigate("/user-dashboard")}
                     className="border border-[#4451A4] text-[#4451A4] px-4 py-2 rounded"
