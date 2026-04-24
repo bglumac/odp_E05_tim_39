@@ -4,7 +4,7 @@ import type { INoteAPIService } from "../../api_services/note_api/INoteAPIServic
 import { useAuthHook } from "../../hooks/auth/useAuthHook";
 import { ProcitajVrednostPoKljucu } from "../../helpers/local_storage";
 import { io, Socket } from "socket.io-client";
-import { connectSocket } from "../../helpers/socket_helper";
+import { applyPatches, makePatches } from "@sanity/diff-match-patch";
 
 interface EditNoteTogetherFormProps {
     noteApi: INoteAPIService;
@@ -41,27 +41,35 @@ const EditNoteTogetherForm = ({ noteApi, socket }: EditNoteTogetherFormProps) =>
             return;
         }
 
-        // Socket setup
-        socket.on("update", () => {
-            // Update text box
-        })
-        
-        const fetchNote = async () => {
-            try {
-                const data = await noteApi.getNoteById(token, Number(noteId));
-                setTitle(data.header ?? "");
-                setContent(data.content ?? "");
-                setIsPinned(data.pinned ?? false);
-                setOwner(data.owner);
-            } catch (err) {
-                console.error(err);
-                navigate("/user-dashboard");
-            } finally {
-                setLoading(false);
-            }
-        };
 
-        fetchNote();
+        setLoading(false);
+
+        // Socket setup
+        socket.on("update-text", (data) => {
+            setContent((prevContent) => {
+                try {
+                    // If data is { patches: [...] }, use data.patches
+                    // If data is the raw array, use data
+                    const patches = Array.isArray(data) ? data : data.patches;
+
+                    const [newValue] = applyPatches(patches, prevContent);
+                    console.log("New merged value:", newValue);
+                    return newValue;
+                } catch (err) {
+                    console.error("Patch application failed", err);
+                    return prevContent; // Don't change anything if it fails
+                }
+            });
+        })
+
+        // Sync
+        socket.on("sync-text", (data) => {
+            console.log("Forced sync!");
+            setContent(data);
+            console.log(data);
+        })
+
+        socket.emit("request-sync");
     }, [noteId, isAuthenticated, token, logout, navigate, noteApi]);
 
     const handleSave = async () => {
@@ -82,6 +90,14 @@ const EditNoteTogetherForm = ({ noteApi, socket }: EditNoteTogetherFormProps) =>
             setSaving(false);
         }
     };
+
+    const handleChange = (event: any) => {
+        const patches = makePatches(content, event.target.value);
+        console.log(patches);
+        socket?.emit("update-text", patches);
+        setContent(event.target.value)
+        console.log("ev val " + event.target.value);
+    }
 
     // const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     //     if (e.target.files && e.target.files[0]) {
@@ -104,7 +120,7 @@ const EditNoteTogetherForm = ({ noteApi, socket }: EditNoteTogetherFormProps) =>
 
             <textarea
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={handleChange}
                 placeholder="Type here..."
                 className="min-h-[300px] border p-4 w-full resize-none"
             />
@@ -117,7 +133,7 @@ const EditNoteTogetherForm = ({ noteApi, socket }: EditNoteTogetherFormProps) =>
             <div className="flex justify-end gap-4 mt-2">
                 <button
                     onClick={handleSave}
-                    disabled={saving && user?.id == owner }
+                    disabled={saving && user?.id == owner}
                     className={`px-4 py-2 rounded text-white ${saving ? "bg-gray-400" : "bg-[#4451A4] hover:bg-[#3b4699]"
                         }`}
                 >

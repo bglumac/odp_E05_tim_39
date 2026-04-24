@@ -4,12 +4,14 @@ import { ISocketService } from "../../Domain/services/sockets/ISocketService";
 import { INoteRepository } from "../../Domain/repositories/notes/INoteRepository";
 import { SocketResponseDTO } from "../../Domain/DTOs/sockets/SocketResponseDTO";
 import { socketAuthorize } from "../../Middleware/SocketAuthorizationMiddleware";
+import { makePatches,applyPatches,stringifyPatch,parsePatch } from "@sanity/diff-match-patch";
 
 
 
 export class SocketService implements ISocketService {
     private io: Server;
     private httpServer;
+    private masterCopies: Map<string, string> = new Map();
 
     public constructor(
         /* Trebace mi repository */ 
@@ -32,23 +34,59 @@ export class SocketService implements ISocketService {
         this.io.use(socketAuthorize(this.io, this.noteRepo));
 
         // Inicijalna konekcija
-        this.io.on("connection", (socket) => {
-            console.log("Client connection...");
+        this.io.on("connection", async (socket) => {
+            console.log("Client connection... " + socket.id);
+
+            const room = this.io.sockets.adapter.rooms.get(socket.data.room);
+            const size = room ? room.size : 0;
+
+            if (size <= 0) {
+                let note = await this.noteRepo.getByID(socket.data.room);
+                if (note == null) {
+                    socket.disconnect(true);
+                }
+
+                this.masterCopies.set(socket.data.room, note.content);
+            }
+
+            
+
             socket.join(socket.data.room);
 
-            socket.on("update-text", () => {
+            socket.on("request-sync", () => {
+                console.log("syncing...");
+                socket.emit("sync-text", this.masterCopies.get(socket.data.room));
+            })
+
+            socket.on("update-text", (data) => {
                 const room = Array.from(socket.rooms).filter(id => id !== socket.id)[0];
                 if (room == null) {
                     // Something wrong, discconect, handle appropriatelly
+                    socket.disconnect(true);
+                    console.log("Room null disconnect!");
                 }
 
-                this.io.to(room).emit("update-text", "yay");          
+                // Patch
+                let current = this.masterCopies.get(room) || "";
+
+                try {
+                        
+                        const [newValue] = applyPatches(data, current);
+                        socket.to(room).emit("update-text", data)
+                        this.masterCopies.set(room, newValue);
+                        console.log(current);
+                        console.log(newValue)
+                }
+
+                catch (err) {
+                    console.log("Failed to apply patch!", err);
+                }    
             })
 
             socket.on("disconnecting", async () => {
                 const rooms = Array.from(socket.rooms).filter(r => r !== socket.id);
 
-                for (let room in rooms) {
+                for (let room of rooms) {
                     let note = await this.noteRepo.getByID(Number(room));
                     if (note.owner == socket.data.user.id) {
                         // disconnect everybody in that room
