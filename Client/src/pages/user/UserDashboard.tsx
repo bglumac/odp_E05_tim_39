@@ -15,6 +15,7 @@ const UserDashboard: FC<UserDashboardProps> = ({ noteApi }) => {
 
   const token = ProcitajVrednostPoKljucu("authToken") || "";
 
+
   if (!isAuthenticated || !token) {
     logout();
     navigate("/login");

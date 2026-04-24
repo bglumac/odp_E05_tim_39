@@ -2,6 +2,7 @@ import { DatabaseConnection } from "./Database/connection/DbConnectionPool";
 import { UserRepository } from "./Database/repositories/UserRepository";
 import { User } from "./Domain/models/User";
 import server from "./server";
+import { SocketService } from "./Services/sockets/SocketService";
 
 require('dotenv').config()
 
@@ -13,8 +14,9 @@ const PORT = process.env.PORT || 8000;
 async function main() {
     // Initialize databaze
     await DatabaseConnection.Connect();
-    
 
+    
+    
     // Open web server
     server.listen(PORT, () => {
         console.log(`Server listening on: http://localhost:${PORT}`)

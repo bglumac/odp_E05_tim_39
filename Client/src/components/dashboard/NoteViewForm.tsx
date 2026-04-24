@@ -4,8 +4,10 @@ import type { NoteDto } from "../../models/notes/NoteDto";
 import type { INoteAPIService } from "../../api_services/note_api/INoteAPIService";
 import { useAuthHook } from "../../hooks/auth/useAuthHook";
 import { useNavigate } from "react-router-dom";
-import { Pencil, Pin, Copy, Share2, Trash2, User, LogOut } from "lucide-react";
+import { Pencil, Pin, Copy, Share2, Trash2, User, LogOut, PenBox, PenLine } from "lucide-react";
 import { ObrisiVrednostPoKljucu, ProcitajVrednostPoKljucu } from "../../helpers/local_storage";
+import { connectSocket } from "../../helpers/socket_helper";
+
 
 interface NoteViewFormProps {
   noteApi: INoteAPIService;
@@ -146,6 +148,10 @@ const NoteViewForm: FC<NoteViewFormProps> = ({ noteApi }) => {
     }
   };
 
+  const handleCollaborate = async () => {
+    if (isSingleSelected) navigate(`/collab/${selectedNotes[0].id}`);
+  }
+
   const handleDelete = () => {
     if (!hasSelection) return;
     setShowDeleteConfirm(true);
@@ -242,7 +248,7 @@ const copyToClipboard = () => {
           <button
             onClick={handleShare}
             disabled={!isSingleSelected}
-            className={`flex items-center gap-2 bg-white text-[#4451A4] rounded-md px-4 py-2 font-medium w-[180px] transition ${!hasSelection ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
+            className={`flex items-center gap-2 bg-white text-[#4451A4] rounded-md px-4 py-2 font-medium w-[180px] transition ${!isSingleSelected ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
           >
             <Share2 size={18} /> Share
           </button>
@@ -253,6 +259,14 @@ const copyToClipboard = () => {
             className={`flex items-center gap-2 bg-white text-[#4451A4] rounded-md px-4 py-2 font-medium w-[180px] transition ${!hasSelection ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
           >
             <Copy size={18} /> Duplicate
+          </button>
+
+          <button
+            onClick={handleCollaborate}
+            disabled={!isSingleSelected}
+            className={`flex items-center gap-2 bg-white text-[#4451A4] rounded-md px-4 py-2 font-medium w-[180px] transition ${!isSingleSelected ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
+          >
+            <PenLine size={18} /> Collaborate
           </button>
 
           <button

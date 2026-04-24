@@ -9,6 +9,7 @@ import EditNotePage from "./pages/edit_note/EditNotePage";
 import { noteApi } from "./api_services/note_api/NoteAPIService";
 import AccountInfoForm from "./components/account_info/AccountInfoForm";
 import ReadOnlyPage from "./pages/read_only/ReadOnlyPage";
+import EditNoteTogether from "./pages/edit_note/EditNoteTogether";
 
 
 function App() {
@@ -46,6 +47,15 @@ function App() {
         </ProtectedRoute>
 
         }
+      />
+
+      <Route
+      path="/collab/:noteId"
+      element={
+        <ProtectedRoute>
+          <EditNoteTogether noteApi={noteApi}/>
+        </ProtectedRoute>
+      }
       />
 
 

@@ -10,6 +10,8 @@ import { NoteRepository } from './Database/repositories/NoteRepository';
 import { NoteController } from './API/controllers/NoteController';
 import { NoteService } from './Services/notes/NoteService';
 import { INoteService } from './Domain/services/notes/INoteService';
+import { ISocketService } from './Domain/services/sockets/ISocketService';
+import { SocketService } from './Services/sockets/SocketService';
 
 const server = express();
 server.use(cors())
@@ -22,14 +24,18 @@ const noteRepo: INoteRepository = new NoteRepository();
 // Services
 const authService: IAuthService = new AuthService(userRepo);
 const noteService: INoteService = new NoteService(noteRepo);
+const socketService: ISocketService = new SocketService(noteRepo);
 
 // Routes
 const authController = new AuthController(authService);
 const noteController = new NoteController(noteService);
 
+
 // Register Routes
 server.use(`/api/v1/auth`, authController.getRouter());
 server.use(`/api/v1/notes`, noteController.getRouter());
 
+// Inits
+socketService.initialize();
 
 export default server;
