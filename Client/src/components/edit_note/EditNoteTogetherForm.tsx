@@ -25,6 +25,7 @@ const EditNoteTogetherForm = ({ noteApi, socket }: EditNoteTogetherFormProps) =>
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [isPinned, setIsPinned] = useState(false);
+    let version = -1;
     //const [image, setImage] = useState<File | null>(null);
 
 
@@ -50,11 +51,20 @@ const EditNoteTogetherForm = ({ noteApi, socket }: EditNoteTogetherFormProps) =>
                 try {
                     // If data is { patches: [...] }, use data.patches
                     // If data is the raw array, use data
-                    const patches = Array.isArray(data) ? data : data.patches;
+                    const trueVersion = data.version;
+                    const patches = data.patches;
 
-                    const [newValue] = applyPatches(patches, prevContent);
+                    if (version != trueVersion-1) {
+                        console.log("Version mismatch! Requesting resync!")
+                        socket.emit("request-sync");
+                    }
+
+                    else {
+                        const [newValue] = applyPatches(patches, prevContent);
                     console.log("New merged value:", newValue);
                     return newValue;
+                    }
+
                 } catch (err) {
                     console.error("Patch application failed", err);
                     return prevContent; // Don't change anything if it fails
@@ -70,7 +80,8 @@ const EditNoteTogetherForm = ({ noteApi, socket }: EditNoteTogetherFormProps) =>
         // Sync
         socket.on("sync-text", (data) => {
             console.log("Forced sync!");
-            setContent(data);
+            setContent(data.content);
+            version = data.version;
             console.log(data);
         })
 

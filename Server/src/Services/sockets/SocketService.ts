@@ -5,13 +5,14 @@ import { INoteRepository } from "../../Domain/repositories/notes/INoteRepository
 import { SocketResponseDTO } from "../../Domain/DTOs/sockets/SocketResponseDTO";
 import { socketAuthorize } from "../../Middleware/SocketAuthorizationMiddleware";
 import { makePatches,applyPatches,stringifyPatch,parsePatch } from "@sanity/diff-match-patch";
+import { MasterCopy } from "../../Domain/models/MasterCopy";
 
 
 
 export class SocketService implements ISocketService {
     private io: Server;
     private httpServer;
-    private masterCopies: Map<string, string> = new Map();
+    private masterCopies: Map<string, MasterCopy> = new Map();
 
     public constructor(
         /* Trebace mi repository */ 
@@ -46,7 +47,7 @@ export class SocketService implements ISocketService {
                     socket.disconnect(true);
                 }
 
-                this.masterCopies.set(socket.data.room, note.content);
+                this.masterCopies.set(socket.data.room, new MasterCopy(note.content, 0));
             }
 
             
@@ -67,13 +68,17 @@ export class SocketService implements ISocketService {
                 }
 
                 // Patch
-                let current = this.masterCopies.get(room) || "";
+                let copy = this.masterCopies.get(room) || new MasterCopy("", 0);
 
                 try {
                         
-                        const [newValue] = applyPatches(data, current);
-                        socket.to(room).emit("update-text", data)
-                        this.masterCopies.set(room, newValue);
+                        const [newValue] = applyPatches(data, copy.content);
+                        socket.to(room).emit("update-text", {
+                            patches: data,
+                            version: copy.version
+                        })
+                        copy.content = newValue;
+                        copy.version++;
                 }
 
                 catch (err) {
